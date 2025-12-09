@@ -1,0 +1,55 @@
+SIDEBAR MENU CONTENTS & PAGE STATUS - REFINED IMPLEMENTATION
+===========================================================
+
+Start of List:
+--------------
+1. Dashboard
+    - Path: /
+    - Icon: LayoutDashboard
+    - Submenus:
+        - **Overview:** (/dashboard/overview) - Displays key summary cards (Service Status Breakdown, Critical Alert Counts, Uptime Score).
+        - **Favorites:** (/dashboard/favorites) - User-configurable widgets for pinned metrics or terminal quick-connect buttons.
+    - Status: **POPULATED** (Implementation of global state data visualization and user-defined widget persistence).
+
+3. Docker
+    - Path: /docker
+    - Icon: Box (Docker)
+    - Status: EMPTY / PLACEHOLDER -> **Suggested Implementation:** **Local Docker Manager.** Displays detected Docker Daemon status, container list (status, CPU/RAM usage), and controls (Start/Stop/Restart) for local containers. 
+
+4. Monitoring
+    - Path: /monitoring
+    - Icon: Activity
+    - Submenus:
+        - **Historical Metrics:** (/monitoring/metrics) - Time-series graphing interface for CPU, RAM, Disk I/O, and custom checks. Includes date-range selector and data aggregation options. 
+
+[Image of time series metric graph]
+
+        - **Alerts Log:** (/monitoring/alerts) - Centralized, filterable table view of all active and resolved system alerts, with notification channel confirmation status.
+    - Status: **POPULATED** (Core functionality based on historical metrics implementation and notification system integration).
+
+6. Terminal
+    - Path: /ssh
+    - Icon: Terminal
+    - Submenus:
+        - **SSH Console:** (/ssh/console) - Secure, browser-based terminal emulator with session logging and host selection dropdown.
+        - **Command History:** (/ssh/history) - View of recently executed remote commands with execution time, user, and host details.
+        - **SFTP Browser:** (/ssh/sftp) - Integrated file browser allowing secure file transfer and basic directory navigation using stored SSH credentials.
+    - Status: **POPULATED** (Implementation requires Paramiko/GoTTY backend for connection and secure key management).
+
+7. RDP
+    - Path: /rdp
+    - Icon: Monitor
+    - Submenus:
+        - **RDP Sessions:** (/rdp/sessions) - Interface to launch new RDP connections using stored credentials and view active sessions.
+        - **Screen Recordings:** (/rdp/recordings) - (Optional Admin Feature) Storage and playback of recorded remote sessions for audit purposes.
+    - Status: **POPULATED** (Implementation requires a secure web-based RDP gateway integration like Apache Guacamole).
+
+Footer Items:
+-------------
+10. Language Switcher
+    - **Change:** Implemented to support maximum language reach.
+    - **Display:** Displays the currently active language code (e.g., **EN**) and offers a full dropdown list on click.
+    - **Supported Languages (Maximum Viability):**
+        * **Major Global:** English (EN), Spanish (ES), French (FR), German (DE), Mandarin (ZH), Russian (RU), Portuguese (PT), Arabic (AR).
+        * **Technical/Regional:** Japanese (JA), Korean (KO), Hindi (HI), Italian (IT).
+    - **Status:** **POPULATED** (Implementation with full i18n framework support).

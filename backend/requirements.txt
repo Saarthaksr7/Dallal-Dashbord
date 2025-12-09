@@ -1,0 +1,17 @@
+fastapi
+uvicorn[standard]
+sqlmodel
+pydantic-settings
+python-multipart
+pyjwt
+passlib[bcrypt]
+httpx
+pysnmp
+requests
+python-jose[cryptography]
+argon2-cffi
+apscheduler
+zeroconf
+loguru
+mac_vendor_lookup
+wakeonlan
