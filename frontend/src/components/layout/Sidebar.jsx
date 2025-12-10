@@ -114,8 +114,8 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
                     </button>
 
                     {/* Language Switcher */}
-                    <div style={{ padding: isCollapsed ? '0.5rem' : '1rem', marginTop: '1rem' }}>
-                        <LanguageSwitcher />
+                    <div style={{ padding: isCollapsed ? '0.5rem' : '0.75rem 1rem', marginTop: '0.5rem' }}>
+                        <LanguageSwitcher isCollapsed={isCollapsed} />
                     </div>
                     {!isCollapsed && <div className="version">v2.0.0</div>}
                 </div>
