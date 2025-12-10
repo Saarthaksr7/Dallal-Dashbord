@@ -12,11 +12,15 @@ import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
 // Lazy Load Pages
 const Login = lazy(() => import('./pages/Login'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Services = lazy(() => import('./pages/Services'));
+const Monitoring = lazy(() => import('./pages/Monitoring'));
+const Alerts = lazy(() => import('./pages/Alerts'));
 const Settings = lazy(() => import('./pages/Settings'));
 const SSH = lazy(() => import('./pages/SSH'));
 const RDP = lazy(() => import('./pages/RDP'));
 const Topology = lazy(() => import('./pages/Topology'));
+const AppStore = lazy(() => import('./pages/AppStore'));
 const Docker = lazy(() => import('./pages/Docker'));
 const Reports = lazy(() => import('./pages/Reports'));
 
@@ -32,16 +36,6 @@ const ProtectedRoute = ({ component: Component, ...rest }) => {
     <Layout>
       <Component {...rest} />
     </Layout>
-  );
-};
-
-// Dashboard Placeholder
-const Dashboard = () => {
-  return (
-    <div>
-      <h1 style={{ marginBottom: '1rem' }}>Dashboard</h1>
-      <p>Welcome to Dallal Dashboard v2.0</p>
-    </div>
   );
 };
 
@@ -65,32 +59,39 @@ function App() {
       <Suspense fallback={<LoadingSpinner />}>
         <Switch>
           <Route path="/login" component={Login} />
-          {/* Protect the root route */}
-          <Route path="/">
+
+          {/* Dashboard Routes */}
+          <Route path="/dashboard">
             <ProtectedRoute component={Dashboard} />
           </Route>
+          <Route path="/dashboard/:rest*">
+            <ProtectedRoute component={Dashboard} />
+          </Route>
+          <Route path="/">
+            {() => {
+              const isAuthenticated = useAuthStore.getState().isAuthenticated;
+              return isAuthenticated ? <Redirect to="/dashboard/overview" /> : <Redirect to="/login" />;
+            }}
+          </Route>
+
           <Route path="/services">
             <ProtectedRoute component={Services} />
           </Route>
-          <Route path="/monitoring">
-            <ProtectedRoute component={Services} />
-          </Route>
-          <Route path="/ssh">
+          <Route path="/monitoring/metrics" component={() => <ProtectedRoute component={Monitoring} />} />
+          <Route path="/monitoring/alerts" component={() => <ProtectedRoute component={Alerts} />} />
+          <Route path="/monitoring" component={() => <ProtectedRoute component={Monitoring} />} />
+          <Route path="/ssh" component={() => <ProtectedRoute component={SSH} />} />
+          <Route path="/ssh/:rest*">
             <ProtectedRoute component={SSH} />
           </Route>
-          <Route path="/rdp">
+          <Route path="/rdp" component={() => <ProtectedRoute component={RDP} />} />
+          <Route path="/rdp/:rest*">
             <ProtectedRoute component={RDP} />
           </Route>
-          <Route path="/topology">
-            <ProtectedRoute component={Topology} />
-          </Route>
-          <Route path="/docker">
-            <ProtectedRoute component={Docker} />
-          </Route>
-          <Route path="/reports">
-            {/* Only Admin/Superuser? For now just protected */}
-            <ProtectedRoute component={Reports} />
-          </Route>
+          <Route path="/topology" component={() => <ProtectedRoute component={Topology} />} />
+          <Route path="/app-store" component={() => <ProtectedRoute component={AppStore} />} />
+          <Route path="/docker" component={() => <ProtectedRoute component={Docker} />} />
+          <Route path="/reports" component={() => <ProtectedRoute component={Reports} />} />
           <Route path="/settings">
             {/* Only Admin can access Settings */}
             {(params) => {

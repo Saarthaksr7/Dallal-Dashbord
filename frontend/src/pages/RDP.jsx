@@ -1,59 +1,98 @@
-import React, { useState, useEffect } from 'react';
-import Card from '../components/ui/Card';
-import { api } from '../lib/api';
-import { Monitor, Download } from 'lucide-react';
+import React from 'react';
+import { Route, Switch, Redirect, useRoute } from 'wouter';
+import { Monitor, Video } from 'lucide-react';
+import { Suspense, lazy } from 'react';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+
+// Lazy load sub-pages
+const RDPSessions = lazy(() => import('./RDPSessions'));
+const RDPRecordings = lazy(() => import('./RDPRecordings'));
 
 const RDP = () => {
-    const [services, setServices] = useState([]);
+    const [isSessions] = useRoute('/rdp/sessions');
+    const [isRecordings] = useRoute('/rdp/recordings');
 
-    useEffect(() => {
-        api.post('/services/discover').then(res => { // Actually should fetch saved services or use store
-            // Let's fetch saved services instead of discovering
-            api.get('/services/group/Default').then(r => setServices(r.data));
-            // Ideally fetch all. Using existing endpoint logic.
-        });
-        // Or better, just fetch all services
-        api.get('/services/').then(r => setServices(r.data));
-    }, []);
-
-    const generateRDP = (service) => {
-        const content = `full address:s:${service.ip}\nusername:s:Administrator\n`;
-        const blob = new Blob([content], { type: 'application/x-rdp' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${service.name}.rdp`;
-        a.click();
-    };
+    const activeTab = isSessions ? 'sessions' : isRecordings ? 'recordings' : 'sessions';
 
     return (
-        <div className="fade-in" style={{ padding: '1rem' }}>
-            <h1 className="page-title">
-                <Monitor style={{ marginRight: '0.75rem', color: '#10b981' }} />
-                Remote Desktop Launcher
-            </h1>
+        <div>
+            {/* Tab Navigation */}
+            <div style={{
+                display: 'flex',
+                gap: '1rem',
+                marginBottom: '2rem',
+                borderBottom: '2px solid var(--border)',
+                paddingBottom: '0'
+            }}>
+                <a
+                    href="/rdp/sessions"
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.75rem 1.5rem',
+                        textDecoration: 'none',
+                        color: activeTab === 'sessions' ? 'var(--accent)' : 'var(--text-secondary)',
+                        borderBottom: activeTab === 'sessions' ? '2px solid var(--accent)' : '2px solid transparent',
+                        marginBottom: '-2px',
+                        fontWeight: activeTab === 'sessions' ? '600' : '500',
+                        transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                        if (activeTab !== 'sessions') {
+                            e.currentTarget.style.color = 'var(--text-primary)';
+                        }
+                    }}
+                    onMouseLeave={(e) => {
+                        if (activeTab !== 'sessions') {
+                            e.currentTarget.style.color = 'var(--text-secondary)';
+                        }
+                    }}
+                >
+                    <Monitor size={18} />
+                    <span>RDP Sessions</span>
+                </a>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
-                {services.filter(s => s.has_rdp || s.check_type === 'tcp').map(s => ( /* broad filter */
-                    <Card key={s.id}>
-                        <h3>{s.name}</h3>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{s.ip}</p>
-                        <button
-                            className="btn primary"
-                            style={{ marginTop: '1rem', width: '100%' }}
-                            onClick={() => generateRDP(s)}
-                        >
-                            <Download size={14} style={{ marginRight: '8px' }} />
-                            Download .rdp
-                        </button>
-                        <div style={{ textAlign: 'center', marginTop: '0.5rem', fontSize: '0.8rem' }}>
-                            <a href={`rdp://${s.ip}`} style={{ color: 'var(--primary)' }}>Try Protocol Handler</a>
-                        </div>
-                    </Card>
-                ))}
+                <a
+                    href="/rdp/recordings"
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.75rem 1.5rem',
+                        textDecoration: 'none',
+                        color: activeTab === 'recordings' ? 'var(--accent)' : 'var(--text-secondary)',
+                        borderBottom: activeTab === 'recordings' ? '2px solid var(--accent)' : '2px solid transparent',
+                        marginBottom: '-2px',
+                        fontWeight: activeTab === 'recordings' ? '600' : '500',
+                        transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                        if (activeTab !== 'recordings') {
+                            e.currentTarget.style.color = 'var(--text-primary)';
+                        }
+                    }}
+                    onMouseLeave={(e) => {
+                        if (activeTab !== 'recordings') {
+                            e.currentTarget.style.color = 'var(--text-secondary)';
+                        }
+                    }}
+                >
+                    <Video size={18} />
+                    <span>Screen Recordings</span>
+                </a>
             </div>
 
-            {services.length === 0 && <p>No services found.</p>}
+            {/* Content */}
+            <Suspense fallback={<LoadingSpinner />}>
+                <Switch>
+                    <Route path="/rdp/sessions" component={RDPSessions} />
+                    <Route path="/rdp/recordings" component={RDPRecordings} />
+                    <Route path="/rdp">
+                        <Redirect to="/rdp/sessions" />
+                    </Route>
+                </Switch>
+            </Suspense>
         </div>
     );
 };

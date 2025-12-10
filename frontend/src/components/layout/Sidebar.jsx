@@ -3,6 +3,7 @@ import { Link, useLocation } from 'wouter';
 import { useAuthStore } from '../../store/auth';
 import { useTranslation } from 'react-i18next'; // Hook
 import Restricted from '../auth/Restricted';
+import LanguageSwitcher from '../LanguageSwitcher';
 import {
     LayoutDashboard,
     Server,
@@ -13,9 +14,9 @@ import {
     Activity,
     Terminal,
     Monitor,
-    Globe, // Icon for lang
     Box, // Docker Icon
-    FileText // Report Icon
+    FileText, // Report Icon
+    ShoppingBag // App Store Icon
 } from 'lucide-react';
 
 const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
@@ -23,23 +24,23 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
     const logout = useAuthStore((state) => state.logout);
     const { t, i18n } = useTranslation(); // Init hook
 
-    const toggleLanguage = () => {
-        const newLang = i18n.language === 'en' ? 'ar' : 'en';
-        i18n.changeLanguage(newLang);
-        // Optional logic for RTL could go here
-    };
-
     const navItems = [
-        { name: t('sidebar.dashboard'), path: '/', icon: LayoutDashboard },
+        { name: t('sidebar.dashboard'), path: '/dashboard', icon: LayoutDashboard },
         { name: t('sidebar.services'), path: '/services', icon: Server },
         { name: t('sidebar.docker'), path: '/docker', icon: Box },
         { name: t('sidebar.monitoring'), path: '/monitoring', icon: Activity },
-        { name: t('sidebar.topology'), path: '/topology', icon: Server }, // Using generic icon if Network/Share2 unavailable in imports
+        { name: t('sidebar.topology'), path: '/topology', icon: Server },
+        { name: t('sidebar.appStore'), path: '/app-store', icon: ShoppingBag },
         { name: t('sidebar.terminal'), path: '/ssh', icon: Terminal },
         { name: t('sidebar.rdp'), path: '/rdp', icon: Monitor },
     ];
 
-    const isActive = (path) => location === path;
+    const isActive = (path) => {
+        if (path === '/dashboard') {
+            return location.startsWith('/dashboard') || location === '/';
+        }
+        return location === path;
+    };
 
     return (
         <>
@@ -70,53 +71,52 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
                 <nav className="sidebar-nav">
                     {navItems.map((item) => (
                         <Link key={item.path} href={item.path}>
-                            <a
+                            <div
                                 className={`nav-item ${isActive(item.path) ? 'active' : ''}`}
                                 title={isCollapsed ? item.name : ''}
                                 aria-current={isActive(item.path) ? 'page' : undefined}
                             >
                                 <item.icon size={22} />
                                 {!isCollapsed && <span>{item.name}</span>}
-                            </a>
+                            </div>
                         </Link>
                     ))}
 
                     <Restricted to="admin">
                         <Link href="/reports">
-                            <a
+                            <div
                                 className={`nav-item ${isActive('/reports') ? 'active' : ''}`}
                                 title={isCollapsed ? "Reports" : ''}
                                 aria-current={isActive('/reports') ? 'page' : undefined}
                             >
                                 <FileText size={22} />
                                 {!isCollapsed && <span>Reports</span>}
-                            </a>
+                            </div>
                         </Link>
                         <Link href="/settings">
-                            <a
+                            <div
                                 className={`nav-item ${isActive('/settings') ? 'active' : ''}`}
                                 title={isCollapsed ? t('sidebar.settings') : ''}
                                 aria-current={isActive('/settings') ? 'page' : undefined}
                             >
                                 <Settings size={22} />
                                 {!isCollapsed && <span>{t('sidebar.settings')}</span>}
-                            </a>
+                            </div>
                         </Link>
                     </Restricted>
                 </nav>
 
                 {/* Footer */}
                 <div className="sidebar-footer">
-                    {/* Language Switcher */}
-                    <button onClick={toggleLanguage} className="nav-item lang-btn" title="Switch Language" aria-label={`Switch language to ${i18n.language === 'en' ? 'Arabic' : 'English'}`}>
-                        <Globe size={22} />
-                        {!isCollapsed && <span>{i18n.language === 'en' ? 'العربية' : 'English'}</span>}
-                    </button>
-
                     <button onClick={logout} className="nav-item logout-btn" aria-label="Logout">
                         <LogOut size={22} />
                         {!isCollapsed && <span>{t('sidebar.logout')}</span>}
                     </button>
+
+                    {/* Language Switcher */}
+                    <div style={{ padding: isCollapsed ? '0.5rem' : '1rem', marginTop: '1rem' }}>
+                        <LanguageSwitcher />
+                    </div>
                     {!isCollapsed && <div className="version">v2.0.0</div>}
                 </div>
             </aside>
