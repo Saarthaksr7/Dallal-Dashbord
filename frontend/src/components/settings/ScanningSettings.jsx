@@ -69,7 +69,7 @@ const ScanningSettings = () => {
 
     const checkStatus = async () => {
         try {
-            const res = await api.get('/discovery/status');
+            const res = await api.get('/services/discovery/status');
             setScanStatus(res.data);
             setScanning(res.data.is_scanning);
         } catch (e) {
@@ -80,7 +80,7 @@ const ScanningSettings = () => {
     const handleScanNow = async () => {
         setScanning(true);
         try {
-            await api.post('/discovery/scan');
+            await api.post('/services/discovery/scan');
             // Toast?
         } catch (e) {
             if (e.response && e.response.status !== 409) {

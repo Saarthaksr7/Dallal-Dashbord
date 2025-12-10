@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Search, Plus, Server, Globe, Monitor, Cpu } from 'lucide-react';
+import { X, Search, Plus, Server, Globe, Monitor, Cpu, Eye, EyeOff } from 'lucide-react';
 import Card from './ui/Card';
 import { scanNetwork, createService, api } from '../lib/api';
 
@@ -23,22 +23,33 @@ const ServiceWizard = ({ onClose, onServiceAdded }) => {
         snmp_community: 'public',
         snmp_port: 161,
         sys_descr: '',
-        check_interval: 60
+        check_interval: 60,
+        ssh_username: '',
+        ssh_password: '',
+        ssh_private_key: '',
+        rdp_username: '',
+        rdp_password: '',
+        rdp_domain: ''
     });
+
+    const [showSSHPassword, setShowSSHPassword] = useState(false);
+    const [showRDPPassword, setShowRDPPassword] = useState(false);
 
     const [existingServices, setExistingServices] = useState([]);
     const [entryMethod, setEntryMethod] = useState('manual'); // 'scan' | 'manual'
 
     const [pollInterval, setPollInterval] = useState(null);
+    const [scanLogs, setScanLogs] = useState([]); // Scan progress logs
 
     const handleScan = async () => {
         setEntryMethod('scan');
         setStep(2);
         setScanning(true);
         setScanResults([]);
+        setScanLogs(['🚀 Starting network scan...']);
 
         try {
-            await api.post('/discovery/scan');
+            await api.post('/services/discovery/scan');
         } catch (error) {
             // If 409, it means scan is already running, which is fine, we just join it.
             if (error.response && error.response.status !== 409) {
@@ -56,10 +67,26 @@ const ServiceWizard = ({ onClose, onServiceAdded }) => {
 
     const checkScanStatus = async () => {
         try {
-            const res = await api.get('/discovery/status');
-            if (res.data.is_scanning === false) {
+            const res = await api.get('/services/discovery/status');
+            const status = res.data;
+
+            // Update logs with current status
+            if (status.is_scanning) {
+                const progress = `📊 Progress: ${status.progress}/${status.total} IPs scanned, ${status.result_count} devices found`;
+                setScanLogs(prev => {
+                    const lastLog = prev[prev.length - 1];
+                    // Only add if different from last log
+                    if (lastLog !== progress) {
+                        return [...prev, progress];
+                    }
+                    return prev;
+                });
+            }
+
+            if (status.is_scanning === false) {
                 // Scan finished
-                if (pollInterval) clearInterval(pollInterval); // Safety check, though explicit clear is better
+                setScanLogs(prev => [...prev, '✨ Scan complete! Loading results...']);
+                if (pollInterval) clearInterval(pollInterval);
                 finishScan();
             }
         } catch (error) {
@@ -69,7 +96,7 @@ const ServiceWizard = ({ onClose, onServiceAdded }) => {
 
     const finishScan = async () => {
         try {
-            const res = await api.get('/discovery/results');
+            const res = await api.get('/services/discovery/results');
             setScanResults(res.data);
         } catch (error) {
             console.error("Failed to fetch results", error);
@@ -196,6 +223,20 @@ const ServiceWizard = ({ onClose, onServiceAdded }) => {
                                 <div className="scanning-state">
                                     <div className="loader"></div>
                                     <p>Scanning local network...</p>
+
+                                    {/* Real-time Scan Logs */}
+                                    <div className="scan-logs">
+                                        <div className="logs-header">
+                                            <strong>Scan Progress</strong>
+                                        </div>
+                                        <div className="logs-content">
+                                            {scanLogs.map((log, idx) => (
+                                                <div key={idx} className="log-entry">
+                                                    {log}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="results-list">
@@ -361,6 +402,132 @@ const ServiceWizard = ({ onClose, onServiceAdded }) => {
                                     </select>
                                 </div>
 
+                                {/* SSH Credentials Section */}
+                                {(formData.tags?.toLowerCase().includes('ssh') ||
+                                    formData.tags?.toLowerCase().includes('linux') ||
+                                    formData.tags?.toLowerCase().includes('unix') ||
+                                    selectedDevice?.has_ssh) && (
+                                        <>
+                                            <div style={{
+                                                marginTop: '1.5rem',
+                                                marginBottom: '1rem',
+                                                paddingTop: '1rem',
+                                                borderTop: '1px solid rgba(255,255,255,0.1)'
+                                            }}>
+                                                <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: 'var(--accent)' }}>
+                                                    SSH Credentials (Optional)
+                                                </h3>
+                                            </div>
+                                            <div className="form-row">
+                                                <div className="form-group">
+                                                    <label>SSH Username</label>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="e.g., root, admin"
+                                                        value={formData.ssh_username}
+                                                        onChange={e => setFormData({ ...formData, ssh_username: e.target.value })}
+                                                    />
+                                                </div>
+                                                <div className="form-group">
+                                                    <label>SSH Password</label>
+                                                    <div style={{ position: 'relative' }}>
+                                                        <input
+                                                            type={showSSHPassword ? 'text' : 'password'}
+                                                            placeholder="Leave empty for key-based"
+                                                            value={formData.ssh_password}
+                                                            onChange={e => setFormData({ ...formData, ssh_password: e.target.value })}
+                                                            style={{ paddingRight: '2.5rem' }}
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowSSHPassword(!showSSHPassword)}
+                                                            style={{
+                                                                position: 'absolute',
+                                                                right: '0.5rem',
+                                                                top: '50%',
+                                                                transform: 'translateY(-50%)',
+                                                                background: 'none',
+                                                                border: 'none',
+                                                                color: 'var(--text-secondary)',
+                                                                cursor: 'pointer',
+                                                                padding: '0.25rem'
+                                                            }}
+                                                        >
+                                                            {showSSHPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+
+                                {/* RDP Credentials Section */}
+                                {(formData.tags?.toLowerCase().includes('rdp') ||
+                                    formData.tags?.toLowerCase().includes('windows') ||
+                                    selectedDevice?.has_rdp) && (
+                                        <>
+                                            <div style={{
+                                                marginTop: '1.5rem',
+                                                marginBottom: '1rem',
+                                                paddingTop: '1rem',
+                                                borderTop: '1px solid rgba(255,255,255,0.1)'
+                                            }}>
+                                                <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: 'var(--accent)' }}>
+                                                    RDP Credentials (Optional)
+                                                </h3>
+                                            </div>
+                                            <div className="form-row">
+                                                <div className="form-group">
+                                                    <label>RDP Username</label>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="e.g., Administrator"
+                                                        value={formData.rdp_username}
+                                                        onChange={e => setFormData({ ...formData, rdp_username: e.target.value })}
+                                                    />
+                                                </div>
+                                                <div className="form-group">
+                                                    <label>RDP Domain (Optional)</label>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="e.g., WORKGROUP"
+                                                        value={formData.rdp_domain}
+                                                        onChange={e => setFormData({ ...formData, rdp_domain: e.target.value })}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="form-group">
+                                                <label>RDP Password</label>
+                                                <div style={{ position: 'relative' }}>
+                                                    <input
+                                                        type={showRDPPassword ? 'text' : 'password'}
+                                                        placeholder="Windows password"
+                                                        value={formData.rdp_password}
+                                                        onChange={e => setFormData({ ...formData, rdp_password: e.target.value })}
+                                                        style={{ paddingRight: '2.5rem' }}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowRDPPassword(!showRDPPassword)}
+                                                        style={{
+                                                            position: 'absolute',
+                                                            right: '0.5rem',
+                                                            top: '50%',
+                                                            transform: 'translateY(-50%)',
+                                                            background: 'none',
+                                                            border: 'none',
+                                                            color: 'var(--text-secondary)',
+                                                            cursor: 'pointer',
+                                                            padding: '0.25rem'
+                                                        }}
+                                                    >
+                                                        {showRDPPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+
                                 <div className="form-group">
                                     <label>Polling Interval (seconds)</label>
                                     <input
@@ -387,7 +554,13 @@ const ServiceWizard = ({ onClose, onServiceAdded }) => {
                     display: flex; align-items: center; justify-content: center;
                     z-index: 1000;
                 }
-                .wizard-container { width: 100%; max-width: 600px; padding: 1rem; }
+                .wizard-container { 
+                    width: 100%; 
+                    max-width: 600px; 
+                    padding: 1rem; 
+                    max-height: 90vh; 
+                    overflow-y: auto;
+                }
                 .wizard-card { background: rgba(20, 20, 30, 0.95) !important; }
                 
                 .close-btn { background: none; border: none; color: var(--text-secondary); cursor: pointer; }

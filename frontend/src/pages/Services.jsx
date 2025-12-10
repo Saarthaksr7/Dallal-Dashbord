@@ -411,7 +411,7 @@ const Services = () => {
                             <h3 style={{ borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>
                                 {grp} <span style={{ fontSize: '0.8rem', opacity: 0.5 }}>({svcs.length})</span>
                             </h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '1.5rem' }}>
                                 {svcs.map((svc) => (
                                     <ServiceCard
                                         key={svc.id}
@@ -442,7 +442,7 @@ const Services = () => {
                         strategy={rectSortingStrategy}
                         disabled={sortBy !== 'custom'}
                     >
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '1.5rem' }}>
                             {filteredServices.map((svc) => (
                                 sortBy === 'custom' ? (
                                     <SortableServiceCard

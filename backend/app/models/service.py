@@ -23,9 +23,15 @@ class Service(SQLModel, table=True):
     mac_address: Optional[str] = Field(default=None)
     vendor: Optional[str] = Field(default=None)
     
-    # SSH Credentials (encrypted)
+    # SSH Credentials (will be encrypted in production)
     ssh_username: Optional[str] = Field(default=None)
     ssh_password: Optional[str] = Field(default=None)
+    ssh_private_key: Optional[str] = Field(default=None)
+    
+    # RDP Credentials (will be encrypted in production)
+    rdp_username: Optional[str] = Field(default=None)
+    rdp_password: Optional[str] = Field(default=None)
+    rdp_domain: Optional[str] = Field(default=None)
     
     # Deep Status Config
     check_type: CheckType = Field(default=CheckType.TCP)

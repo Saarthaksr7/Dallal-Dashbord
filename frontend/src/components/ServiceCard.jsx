@@ -68,9 +68,13 @@ const ServiceCard = ({ service, onAction, onEdit, onDelete, onWake, statusMap, i
         setLocation(`/rdp?ip=${service.ip}&username=${service.rdp_username || ''}&password=${service.rdp_password || ''}&domain=${service.rdp_domain || ''}`);
     };
 
+    // Check if service has SSH or RDP based on tags or credentials
+    const hasSSH = service.ssh_username || service.tags?.toLowerCase().includes('ssh') || service.tags?.toLowerCase().includes('linux');
+    const hasRDP = service.rdp_username || service.tags?.toLowerCase().includes('rdp') || service.tags?.toLowerCase().includes('windows');
+
     return (
         <Card
-            className={`service - card ${isSelected ? 'selected' : ''} `}
+            className={`service-card ${isSelected ? 'selected' : ''} `}
             onClick={(e) => {
                 if (isSelectionMode) {
                     e.preventDefault();
@@ -256,9 +260,9 @@ const ServiceCard = ({ service, onAction, onEdit, onDelete, onWake, statusMap, i
             </div>
 
             {/* Quick Connect Buttons */}
-            {(service.ssh_username || service.rdp_username) && (
+            {(hasSSH || hasRDP) && (
                 <div className="card-quick-connect-row">
-                    {service.ssh_username && (
+                    {hasSSH && (
                         <button
                             className="quick-connect-btn ssh"
                             onClick={handleSSHConnect}
@@ -268,7 +272,7 @@ const ServiceCard = ({ service, onAction, onEdit, onDelete, onWake, statusMap, i
                             <span>SSH</span>
                         </button>
                     )}
-                    {service.rdp_username && (
+                    {hasRDP && (
                         <button
                             className="quick-connect-btn rdp"
                             onClick={handleRDPConnect}
@@ -344,12 +348,17 @@ const ServiceCard = ({ service, onAction, onEdit, onDelete, onWake, statusMap, i
             </div>
 
             <style>{`
-                .service-card { 
+                .glass-panel.service-card,
+                div.service-card { 
                     transition: all 0.2s ease; 
                     cursor: pointer; 
                     position: relative;
+                    background: linear-gradient(135deg, rgba(30, 41, 59, 0.4), rgba(15, 23, 42, 0.6)) !important;
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
                 }
-                .service-card:hover { 
+                .glass-panel.service-card:hover,
+                div.service-card:hover { 
                     transform: translateY(-2px); 
                     border-color: var(--accent);
                     box-shadow: 0 8px 20px rgba(0,0,0,0.2);
@@ -482,6 +491,7 @@ const ServiceCard = ({ service, onAction, onEdit, onDelete, onWake, statusMap, i
                     display: flex; 
                     justify-content: flex-start;
                     gap: 0.5rem; 
+                    flex-wrap: wrap;
                     border-top: 1px solid rgba(255,255,255,0.05); 
                     padding-top: 0.75rem;
                     margin-top: 0.75rem;
