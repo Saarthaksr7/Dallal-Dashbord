@@ -1,9 +1,11 @@
 import React from 'react';
 import Card from './ui/Card';
-import { Globe, Server, Activity, Play, Square, RotateCw, Zap, Trash2, Settings, AlertTriangle, GitCommit, Wrench, GripVertical } from 'lucide-react';
+import { useLocation } from 'wouter';
+import { Globe, Server, Activity, Play, Square, RotateCw, Zap, Trash2, Settings, AlertTriangle, GitCommit, Wrench, GripVertical, Terminal, Monitor } from 'lucide-react';
 import Restricted from './auth/Restricted';
 
 const ServiceCard = ({ service, onAction, onEdit, onDelete, onWake, statusMap, isSelectionMode, isSelected, onToggleSelection, isDraggable, dragListeners }) => {
+    const [, setLocation] = useLocation();
     const isOnline = service.is_active;
     const enabled = service.enabled !== false;
     const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
@@ -52,6 +54,18 @@ const ServiceCard = ({ service, onAction, onEdit, onDelete, onWake, statusMap, i
         // Assume parent handles toggle via onEdit or specialized prop, 
         // for now just visual toggle for UI demo if no handler
         if (onEdit) onEdit({ ...service, enabled: !enabled });
+    };
+
+    const handleSSHConnect = (e) => {
+        e.stopPropagation();
+        // Navigate to SSH page with pre-filled credentials
+        setLocation(`/ssh?ip=${service.ip}&username=${service.ssh_username || ''}&password=${service.ssh_password || ''}`);
+    };
+
+    const handleRDPConnect = (e) => {
+        e.stopPropagation();
+        // Navigate to RDP page with pre-filled credentials
+        setLocation(`/rdp?ip=${service.ip}&username=${service.rdp_username || ''}&password=${service.rdp_password || ''}&domain=${service.rdp_domain || ''}`);
     };
 
     return (
@@ -241,6 +255,32 @@ const ServiceCard = ({ service, onAction, onEdit, onDelete, onWake, statusMap, i
                 </div>
             </div>
 
+            {/* Quick Connect Buttons */}
+            {(service.ssh_username || service.rdp_username) && (
+                <div className="card-quick-connect-row">
+                    {service.ssh_username && (
+                        <button
+                            className="quick-connect-btn ssh"
+                            onClick={handleSSHConnect}
+                            title={`SSH to ${service.name}`}
+                        >
+                            <Terminal size={14} />
+                            <span>SSH</span>
+                        </button>
+                    )}
+                    {service.rdp_username && (
+                        <button
+                            className="quick-connect-btn rdp"
+                            onClick={handleRDPConnect}
+                            title={`RDP to ${service.name}`}
+                        >
+                            <Monitor size={14} />
+                            <span>RDP</span>
+                        </button>
+                    )}
+                </div>
+            )}
+
             <div className="card-actions-row">
                 <button
                     className={`icon-btn ${service.maintenance ? 'active' : ''}`}
@@ -392,6 +432,50 @@ const ServiceCard = ({ service, onAction, onEdit, onDelete, onWake, statusMap, i
                     color: var(--text-secondary); 
                     margin-top: 0.25rem; 
                     opacity: 0.7; 
+                }
+                
+                .card-quick-connect-row {
+                    display: flex;
+                    gap: 0.5rem;
+                    margin-top: 0.75rem;
+                    padding-top: 0.5rem;
+                    border-top: 1px solid rgba(255,255,255,0.05);
+                }
+
+                .quick-connect-btn {
+                    flex: 1;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.5rem;
+                    padding: 0.5rem 1rem;
+                    border-radius: 6px;
+                    border: 1px solid rgba(255,255,255,0.1);
+                    background: rgba(255,255,255,0.05);
+                    color: var(--text-secondary);
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    font-size: 0.85rem;
+                    font-weight: 500;
+                }
+
+                .quick-connect-btn:hover {
+                    transform: translateY(-1px);
+                    border-color: var(--accent);
+                    color: var(--accent);
+                    background: rgba(59, 130, 246, 0.1);
+                }
+
+                .quick-connect-btn.ssh:hover {
+                    border-color: #10b981;
+                    color: #10b981;
+                    background: rgba(16, 185, 129, 0.1);
+                }
+
+                .quick-connect-btn.rdp:hover {
+                    border-color: #f59e0b;
+                    color: #f59e0b;
+                    background: rgba(245, 158, 11, 0.1);
                 }
                 
                 .card-actions-row { 

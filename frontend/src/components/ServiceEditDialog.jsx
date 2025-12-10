@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Eye, EyeOff } from 'lucide-react';
 import Card from './ui/Card';
 import { api } from '../lib/api';
 
@@ -19,8 +19,17 @@ const ServiceEditDialog = ({ service, onClose, onSave }) => {
         snmp_community: 'public',
         snmp_port: 161,
         sys_descr: '',
-        check_interval: 60
+        check_interval: 60,
+        ssh_username: '',
+        ssh_password: '',
+        ssh_private_key: '',
+        rdp_username: '',
+        rdp_password: '',
+        rdp_domain: ''
     });
+
+    const [showSSHPassword, setShowSSHPassword] = useState(false);
+    const [showRDPPassword, setShowRDPPassword] = useState(false);
 
     const [existingServices, setExistingServices] = useState([]);
 
@@ -42,7 +51,13 @@ const ServiceEditDialog = ({ service, onClose, onSave }) => {
                 snmp_community: service.snmp_community || 'public',
                 snmp_port: service.snmp_port || 161,
                 sys_descr: service.sys_descr || '',
-                check_interval: service.check_interval || 60
+                check_interval: service.check_interval || 60,
+                ssh_username: service.ssh_username || '',
+                ssh_password: service.ssh_password || '',
+                ssh_private_key: service.ssh_private_key || '',
+                rdp_username: service.rdp_username || '',
+                rdp_password: service.rdp_password || '',
+                rdp_domain: service.rdp_domain || ''
             });
         }
 
@@ -201,6 +216,130 @@ const ServiceEditDialog = ({ service, onClose, onSave }) => {
                                 ))}
                             </select>
                         </div>
+
+                        {/* SSH Credentials Section */}
+                        {(formData.tags?.toLowerCase().includes('ssh') ||
+                            formData.tags?.toLowerCase().includes('linux') ||
+                            formData.tags?.toLowerCase().includes('unix')) && (
+                                <>
+                                    <div style={{
+                                        marginTop: '1.5rem',
+                                        marginBottom: '1rem',
+                                        paddingTop: '1rem',
+                                        borderTop: '1px solid rgba(255,255,255,0.1)'
+                                    }}>
+                                        <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: 'var(--accent)' }}>
+                                            SSH Credentials (Optional)
+                                        </h3>
+                                    </div>
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label>SSH Username</label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g., root, admin"
+                                                value={formData.ssh_username}
+                                                onChange={e => setFormData({ ...formData, ssh_username: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>SSH Password</label>
+                                            <div style={{ position: 'relative' }}>
+                                                <input
+                                                    type={showSSHPassword ? 'text' : 'password'}
+                                                    placeholder="Leave empty for key-based auth"
+                                                    value={formData.ssh_password}
+                                                    onChange={e => setFormData({ ...formData, ssh_password: e.target.value })}
+                                                    style={{ paddingRight: '2.5rem' }}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowSSHPassword(!showSSHPassword)}
+                                                    style={{
+                                                        position: 'absolute',
+                                                        right: '0.5rem',
+                                                        top: '50%',
+                                                        transform: 'translateY(-50%)',
+                                                        background: 'none',
+                                                        border: 'none',
+                                                        color: 'var(--text-secondary)',
+                                                        cursor: 'pointer',
+                                                        padding: '0.25rem'
+                                                    }}
+                                                >
+                                                    {showSSHPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                        {/* RDP Credentials Section */}
+                        {(formData.tags?.toLowerCase().includes('rdp') ||
+                            formData.tags?.toLowerCase().includes('windows')) && (
+                                <>
+                                    <div style={{
+                                        marginTop: '1.5rem',
+                                        marginBottom: '1rem',
+                                        paddingTop: '1rem',
+                                        borderTop: '1px solid rgba(255,255,255,0.1)'
+                                    }}>
+                                        <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: 'var(--accent)' }}>
+                                            RDP Credentials (Optional)
+                                        </h3>
+                                    </div>
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label>RDP Username</label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g., Administrator"
+                                                value={formData.rdp_username}
+                                                onChange={e => setFormData({ ...formData, rdp_username: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>RDP Domain (Optional)</label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g., WORKGROUP"
+                                                value={formData.rdp_domain}
+                                                onChange={e => setFormData({ ...formData, rdp_domain: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>RDP Password</label>
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type={showRDPPassword ? 'text' : 'password'}
+                                                placeholder="Windows password"
+                                                value={formData.rdp_password}
+                                                onChange={e => setFormData({ ...formData, rdp_password: e.target.value })}
+                                                style={{ paddingRight: '2.5rem' }}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowRDPPassword(!showRDPPassword)}
+                                                style={{
+                                                    position: 'absolute',
+                                                    right: '0.5rem',
+                                                    top: '50%',
+                                                    transform: 'translateY(-50%)',
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    color: 'var(--text-secondary)',
+                                                    cursor: 'pointer',
+                                                    padding: '0.25rem'
+                                                }}
+                                            >
+                                                {showRDPPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
 
                         <div className="form-group">
                             <label>Polling Interval (seconds)</label>
