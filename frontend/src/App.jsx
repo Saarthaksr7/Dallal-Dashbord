@@ -9,6 +9,7 @@ import ToastContainer from './components/ui/ToastContainer';
 import ShortcutsHelp from './components/ShortcutsHelp';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy Load Pages
 const Login = lazy(() => import('./pages/Login'));
@@ -23,6 +24,7 @@ const Topology = lazy(() => import('./pages/Topology'));
 const AppStore = lazy(() => import('./pages/AppStore'));
 const Docker = lazy(() => import('./pages/Docker'));
 const Reports = lazy(() => import('./pages/Reports'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Protected Route Component
 const ProtectedRoute = ({ component: Component, ...rest }) => {
@@ -51,7 +53,7 @@ function App() {
   });
 
   return (
-    <>
+    <ErrorBoundary>
       <ThemeManager />
       <ToastContainer />
       <ShortcutsHelp isOpen={showHelp} onClose={() => setShowHelp(false)} />
@@ -101,10 +103,10 @@ function App() {
             }}
           </Route>
           {/* Catch all else */}
-          <Route>404: No such page!</Route>
+          <Route component={NotFound} />
         </Switch>
       </Suspense>
-    </>
+    </ErrorBoundary>
   );
 }
 

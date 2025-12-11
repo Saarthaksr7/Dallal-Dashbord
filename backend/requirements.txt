@@ -1,5 +1,7 @@
 fastapi
 uvicorn[standard]
+gunicorn  # Production WSGI server
+slowapi  # Rate limiting
 sqlmodel
 pydantic-settings
 python-multipart
@@ -15,3 +17,10 @@ zeroconf
 loguru
 mac_vendor_lookup
 wakeonlan
+
+# Optional but recommended for production
+redis  # Caching
+psycopg2-binary  # PostgreSQL adapter
+pymysql  # MySQL adapter (alternative)
+sentry-sdk[fastapi]  # Error tracking
+prometheus-fastapi-instrumentator  # Metrics
