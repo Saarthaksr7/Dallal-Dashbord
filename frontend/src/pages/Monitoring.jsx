@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useServicesStore } from '../store/services';
 import { api } from '../lib/api';
 import Card from '../components/ui/Card';
-import { Activity, TrendingUp, TrendingDown, Calendar, RefreshCw } from 'lucide-react';
+import { Activity, TrendingUp, TrendingDown, Calendar, RefreshCw, Bell } from 'lucide-react';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const Monitoring = () => {
@@ -79,13 +79,25 @@ const Monitoring = () => {
     return (
         <div>
             <div style={{ marginBottom: '1.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                    <Activity size={28} style={{ color: 'var(--accent)' }} aria-hidden="true" />
-                    <h1 style={{ margin: '0 0 0.5rem 0' }}>{t('monitoring.metrics.title')}</h1>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <Activity size={28} style={{ color: 'var(--accent)' }} aria-hidden="true" />
+                        <div>
+                            <h1 style={{ margin: '0 0 0.5rem 0' }}>{t('monitoring.metrics.title')}</h1>
+                            <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
+                                {t('monitoring.metrics.subtitle')}
+                            </p>
+                        </div>
+                    </div>
+                    <a
+                        href="/monitoring/alerts"
+                        className="btn btn-primary"
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}
+                    >
+                        <Bell size={18} />
+                        Manage Alert Rules
+                    </a>
                 </div>
-                <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
-                    {t('monitoring.metrics.subtitle')}
-                </p>
             </div>
 
             {/* Controls */}

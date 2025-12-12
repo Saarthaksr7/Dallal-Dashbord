@@ -468,6 +468,68 @@ const Alerts = () => {
                     </div>
                 </div>
             )}
+
+            {/* Rules Manager Modal */}
+            {showRulesManager === true && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.8)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 9999,
+                    padding: '1rem'
+                }}>
+                    <div style={{
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '16px',
+                        width: '100%',
+                        maxWidth: '800px',
+                        maxHeight: '90vh',
+                        overflow: 'auto'
+                    }}>
+                        <div style={{
+                            padding: '1.5rem',
+                            borderBottom: '1px solid var(--border)',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                        }}>
+                            <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Alert Rules Manager</h2>
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={() => {
+                                        setEditingRule(null);
+                                        setShowRulesManager('builder');
+                                    }}
+                                >
+                                    + New Rule
+                                </button>
+                                <button onClick={() => setShowRulesManager(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                                    <X size={24} />
+                                </button>
+                            </div>
+                        </div>
+                        <div style={{ padding: '1.5rem' }}>
+                            <AlertRulesList onEdit={(rule) => { setEditingRule(rule); setShowRulesManager('builder'); }} />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Rule Builder */}
+            {showRulesManager === 'builder' && (
+                <AlertRuleBuilder
+                    onClose={() => { setEditingRule(null); setShowRulesManager(false); }}
+                    editingRule={editingRule}
+                />
+            )}
         </div>
     );
 };
