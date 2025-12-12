@@ -96,13 +96,25 @@ const EmailNotifications = () => {
                 borderRadius: '8px',
                 marginBottom: '1.5rem'
             }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
-                    <input
-                        type="checkbox"
-                        checked={smtp.enabled}
-                        onChange={(e) => updateSMTP({ enabled: e.target.checked })}
-                        style={{ width: '20px', height: '20px' }}
-                    />
+                <label
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}
+                    onClick={() => updateSMTP({ enabled: !smtp.enabled })}
+                >
+                    <div style={{
+                        width: '24px',
+                        height: '24px',
+                        minWidth: '24px',
+                        border: '2px solid',
+                        borderColor: smtp.enabled ? 'var(--accent)' : 'var(--border)',
+                        borderRadius: '6px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: smtp.enabled ? 'var(--accent)' : 'transparent',
+                        transition: 'all 0.2s'
+                    }}>
+                        {smtp.enabled && <Check size={16} color="white" strokeWidth={3} />}
+                    </div>
                     <span style={{ fontSize: '1.1rem', fontWeight: '600' }}>
                         Enable Email Notifications
                     </span>
@@ -195,13 +207,26 @@ const EmailNotifications = () => {
                                 </div>
                             </div>
 
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <input
-                                    type="checkbox"
-                                    checked={smtp.secure}
-                                    onChange={(e) => updateSMTP({ secure: e.target.checked, port: e.target.checked ? 465 : 587 })}
-                                />
-                                Use SSL/TLS (port 465) - Uncheck for STARTTLS (port 587)
+                            <label
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}
+                                onClick={() => updateSMTP({ secure: !smtp.secure, port: !smtp.secure ? 465 : 587 })}
+                            >
+                                <div style={{
+                                    width: '20px',
+                                    height: '20px',
+                                    minWidth: '20px',
+                                    border: '2px solid',
+                                    borderColor: smtp.secure ? 'var(--accent)' : 'var(--border)',
+                                    borderRadius: '4px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    backgroundColor: smtp.secure ? 'var(--accent)' : 'transparent',
+                                    transition: 'all 0.2s'
+                                }}>
+                                    {smtp.secure && <Check size={14} color="white" strokeWidth={3} />}
+                                </div>
+                                <span style={{ cursor: 'pointer' }}>Use SSL/TLS (port 465) - Uncheck for STARTTLS (port 587)</span>
                             </label>
                         </div>
                     </div>
@@ -291,21 +316,25 @@ const EmailNotifications = () => {
                         <div style={{ display: 'grid', gap: '1rem' }}>
                             {/* Digest Settings */}
                             <div>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                                    <input
-                                        type="checkbox"
-                                        checked={preferences.sendDigest}
-                                        onChange={(e) => updatePreferences({ sendDigest: e.target.checked })}
-                                        style={{
-                                            width: '20px',
-                                            height: '20px',
-                                            minWidth: '20px',
-                                            accentColor: 'var(--accent)',
-                                            cursor: 'pointer',
-                                            border: '2px solid var(--border)',
-                                            borderRadius: '4px'
-                                        }}
-                                    />
+                                <label
+                                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', cursor: 'pointer' }}
+                                    onClick={() => updatePreferences({ sendDigest: !preferences.sendDigest })}
+                                >
+                                    <div style={{
+                                        width: '20px',
+                                        height: '20px',
+                                        minWidth: '20px',
+                                        border: '2px solid',
+                                        borderColor: preferences.sendDigest ? 'var(--accent)' : 'var(--border)',
+                                        borderRadius: '4px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        backgroundColor: preferences.sendDigest ? 'var(--accent)' : 'transparent',
+                                        transition: 'all 0.2s'
+                                    }}>
+                                        {preferences.sendDigest && <Check size={14} color="white" strokeWidth={3} />}
+                                    </div>
                                     <span style={{ fontWeight: '500' }}>Send digest instead of individual alerts</span>
                                 </label>
 
@@ -347,22 +376,26 @@ const EmailNotifications = () => {
                                 </div>
                             </div>
 
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <input
-                                    type="checkbox"
-                                    checked={!!preferences.includeCharts}
-                                    onChange={(e) => updatePreferences({ includeCharts: e.target.checked })}
-                                    style={{
-                                        width: '20px',
-                                        height: '20px',
-                                        minWidth: '20px',
-                                        accentColor: 'var(--accent)',
-                                        cursor: 'pointer',
-                                        border: '2px solid var(--border)',
-                                        borderRadius: '4px'
-                                    }}
-                                />
-                                <span style={{ cursor: 'pointer' }}>Include charts (increases email size)</span>
+                            <label
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}
+                                onClick={() => updatePreferences({ includeCharts: !preferences.includeCharts })}
+                            >
+                                <div style={{
+                                    width: '20px',
+                                    height: '20px',
+                                    minWidth: '20px',
+                                    border: '2px solid',
+                                    borderColor: preferences.includeCharts ? 'var(--accent)' : 'var(--border)',
+                                    borderRadius: '4px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    backgroundColor: preferences.includeCharts ? 'var(--accent)' : 'transparent',
+                                    transition: 'all 0.2s'
+                                }}>
+                                    {preferences.includeCharts && <Check size={14} color="white" strokeWidth={3} />}
+                                </div>
+                                <span>Include charts (increases email size)</span>
                             </label>
 
                             {/* Email Format Dropdown */}
