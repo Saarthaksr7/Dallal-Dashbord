@@ -11,7 +11,7 @@ import sys
 from app.core.config import settings
 from app.core.database import init_db
 from app.core.logging import setup_logging # New import
-from app.api.v1 import services, auth, ssh, docker, settings as settings_router, sftp, keys, audit, webhooks, backup, wol, traps, api_keys, vcs
+from app.api.v1 import services, auth, ssh, docker, settings as settings_router, sftp, keys, audit, webhooks, backup, wol, traps, api_keys, vcs, rdp
 from app.api import notifications
 
 # Initialize Sentry (only in production)
@@ -136,6 +136,7 @@ app.include_router(notifications.router, prefix="/api", tags=["notifications"])
 
 from app.api.v1 import reports
 app.include_router(reports.router, prefix=f"{settings.API_V1_STR}/reports", tags=["reports"])
+app.include_router(rdp.router, prefix=f"{settings.API_V1_STR}/rdp", tags=["rdp"])
 
 # Prometheus Metrics - Exposes /metrics endpoint for monitoring
 Instrumentator().instrument(app).expose(app)

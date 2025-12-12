@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { X, ChevronRight, ChevronLeft, Check } from 'lucide-react';
 import { useLocation } from 'wouter';
 
@@ -11,6 +11,7 @@ const OnboardingTour = ({ isOpen, onClose, userRole = 'user' }) => {
     const [currentStep, setCurrentStep] = useState(0);
     const [location, setLocation] = useLocation();
     const [highlightedElement, setHighlightedElement] = useState(null);
+    const lastNavigatedRoute = useRef(null);
 
     // Define tour steps based on user role
     const getTourSteps = useCallback(() => {
@@ -76,10 +77,10 @@ const OnboardingTour = ({ isOpen, onClose, userRole = 'user' }) => {
         const adminSteps = [
             ...commonSteps.slice(0, 6),
             {
-                title: 'Admin Features',
-                content: 'As an admin, you have access to advanced features like user management, audit logs, and system configuration.',
-                target: '[href="/admin"]',
-                route: '/admin',
+                title: 'Ops Center',
+                content: 'The Ops Center lets you manage and monitor multiple applications from a unified dashboard with integrated iframe views.',
+                target: '[href="/ops-center"]',
+                route: '/ops-center',
                 position: 'right',
             },
             ...commonSteps.slice(6),
@@ -119,12 +120,16 @@ const OnboardingTour = ({ isOpen, onClose, userRole = 'user' }) => {
         onClose();
     }, [onClose]);
 
-    // Navigate to step route if needed
+    // Navigate to step route if needed (fixed infinite loop by removing setLocation from deps)
     useEffect(() => {
         if (isOpen && currentStepData?.route && location !== currentStepData.route) {
-            setLocation(currentStepData.route);
+            // Only navigate if we haven't already navigated to this route for this step
+            if (lastNavigatedRoute.current !== currentStepData.route) {
+                lastNavigatedRoute.current = currentStepData.route;
+                setLocation(currentStepData.route);
+            }
         }
-    }, [currentStep, currentStepData, isOpen, location, setLocation]);
+    }, [currentStep, currentStepData, isOpen, location]); // Removed setLocation from deps
 
     // Highlight target element
     useEffect(() => {

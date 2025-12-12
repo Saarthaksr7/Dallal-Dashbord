@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useUIStore } from '../store/ui';
 import { useAuthStore } from '../store/auth';
 import Card from '../components/ui/Card';
-import { Moon, Sun, Monitor, Check, Key, Activity, Webhook as WebhookIcon, Save, Shield, GitBranch, Download, Upload, Mail } from 'lucide-react';
+import { Moon, Sun, Monitor, Check, Key, Activity, Webhook as WebhookIcon, Save, Shield, GitBranch, Download, Upload, Mail, Settings as SettingsIcon, Bell, FileSearch } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { downloadSettings, parseImportedSettings } from '../utils/settingsBackup';
 
@@ -113,10 +113,11 @@ const Settings = () => {
                                 fontSize: '1rem',
                                 transition: 'all 0.2s',
                                 fontWeight: activeTab === tab.id ? 600 : 400,
-                                whiteSpace: 'nowrap'
+                                whiteSpace: 'nowrap',
+                                listStyle: 'none'
                             }}
                         >
-                            <tab.icon size={18} aria-hidden="true" />
+                            <tab.icon size={22} aria-hidden="true" />
                             {tab.label}
                         </button>
                     ))}

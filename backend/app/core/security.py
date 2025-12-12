@@ -61,9 +61,8 @@ def get_password_hash(password: str) -> str:
     """Hash a password for storing."""
     return pwd_context.hash(password)
 
-# JWT token settings
-SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "YOUR_SECRET_KEY_CHANGE_IN_PRODUCTION")
-ALGORITHM = "HS256"
+# JWT token settings - import from config to ensure consistency
+from app.core.config import settings as app_settings
 
 def create_access_token(subject: Union[str, Any], expires_delta: timedelta = None) -> str:
     """Create a JWT access token."""
@@ -73,7 +72,8 @@ def create_access_token(subject: Union[str, Any], expires_delta: timedelta = Non
         expire = datetime.utcnow() + timedelta(minutes=15)
     
     to_encode = {"exp": expire, "sub": str(subject)}
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    # Use settings.SECRET_KEY to match what deps.py uses for validation
+    encoded_jwt = jwt.encode(to_encode, app_settings.SECRET_KEY, algorithm=app_settings.ALGORITHM)
     return encoded_jwt
 
 # ==========================================

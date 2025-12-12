@@ -531,7 +531,7 @@ const Services = () => {
                                         onAction={handleOptimisticAction}
                                         onWake={handleOptimisticWake}
                                         onEdit={handleOptimisticEdit}
-                                        onDelete={handleOptimisticDelete}
+                                        onDelete={handleDeleteClick}
                                     />
                                 ) : (
                                     <ServiceCard
@@ -545,7 +545,7 @@ const Services = () => {
                                         onAction={handleOptimisticAction}
                                         onWake={handleOptimisticWake}
                                         onEdit={handleOptimisticEdit}
-                                        onDelete={handleOptimisticDelete}
+                                        onDelete={handleDeleteClick}
                                     />
                                 )
                             ))}

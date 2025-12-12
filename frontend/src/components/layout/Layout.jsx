@@ -4,6 +4,7 @@ import Sidebar from './Sidebar';
 import { Menu } from 'lucide-react';
 import { useUIStore } from '../../store/ui';
 import CommandPalette from '../ui/CommandPalette';
+import ThemeSwitcher from '../ThemeSwitcher';
 
 const Layout = ({ children }) => {
     // Global State
@@ -62,6 +63,9 @@ const Layout = ({ children }) => {
                         <Menu size={24} />
                     </button>
                     <span className="mobile-title">Dallal Dashboard</span>
+                    <div style={{ marginLeft: 'auto' }}>
+                        <ThemeSwitcher />
+                    </div>
                 </header>
 
                 <div className="content-wrapper" style={{ paddingTop: mobileOpen ? '60px' : '' }}>

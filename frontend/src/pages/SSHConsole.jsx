@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Terminal } from 'xterm';
+import * as XTermNamespace from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import 'xterm/css/xterm.css';
 import { api, BASE_URL } from '../lib/api';
@@ -32,7 +32,7 @@ const SSH = () => {
         if (!selectedService || !credentials.username || !credentials.password) return;
 
         // Initialize xterm
-        const term = new Terminal({
+        const term = new XTermNamespace.Terminal({
             cursorBlink: true,
             theme: {
                 background: '#0d1117',

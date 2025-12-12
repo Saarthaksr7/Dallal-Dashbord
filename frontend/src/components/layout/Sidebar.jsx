@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/auth';
 import { useTranslation } from 'react-i18next'; // Hook
 import Restricted from '../auth/Restricted';
 import LanguageSwitcher from '../LanguageSwitcher';
+import ThemeSwitcher from '../ThemeSwitcher';
 import {
     LayoutDashboard,
     Server,
@@ -16,7 +17,8 @@ import {
     Monitor,
     Box, // Docker Icon
     FileText, // Report Icon
-    ShoppingBag // App Store Icon
+    ShoppingBag, // App Store Icon
+    X
 } from 'lucide-react';
 
 const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
@@ -29,7 +31,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
         { name: t('sidebar.services'), path: '/services', icon: Server },
         { name: t('sidebar.docker'), path: '/docker', icon: Box },
         { name: t('sidebar.monitoring'), path: '/monitoring', icon: Activity },
-        { name: t('sidebar.topology'), path: '/topology', icon: Server },
+        { name: t('sidebar.opsCenter'), path: '/ops-center', icon: Server },
         { name: t('sidebar.appStore'), path: '/app-store', icon: ShoppingBag },
         { name: t('sidebar.terminal'), path: '/ssh', icon: Terminal },
         { name: t('sidebar.rdp'), path: '/rdp', icon: Monitor },
@@ -152,8 +154,13 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
                         {!isCollapsed && <span>{t('sidebar.logout')}</span>}
                     </button>
 
+                    {/* Theme Switcher */}
+                    <div style={{ padding: isCollapsed ? '0.5rem' : '0.75rem 1rem', marginTop: '0.5rem', display: 'flex', justifyContent: 'center' }}>
+                        <ThemeSwitcher />
+                    </div>
+
                     {/* Language Switcher */}
-                    <div style={{ padding: isCollapsed ? '0.5rem' : '0.75rem 1rem', marginTop: '0.5rem' }}>
+                    <div style={{ padding: isCollapsed ? '0.5rem' : '0.75rem 1rem' }}>
                         <LanguageSwitcher isCollapsed={isCollapsed} />
                     </div>
                     {!isCollapsed && <div className="version">v2.0.0</div>}

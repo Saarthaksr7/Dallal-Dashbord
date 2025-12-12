@@ -7,6 +7,7 @@ import Layout from './components/layout/Layout';
 import ThemeManager from './components/ThemeManager';
 import ToastContainer from './components/ui/ToastContainer';
 import ShortcutsHelp from './components/ShortcutsHelp';
+import KeyboardShortcutsHelper from './components/KeyboardShortcutsHelper';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -23,7 +24,7 @@ const Alerts = lazy(() => import('./pages/Alerts'));
 const Settings = lazy(() => import('./pages/Settings'));
 const SSH = lazy(() => import('./pages/SSH'));
 const RDP = lazy(() => import('./pages/RDP'));
-const Topology = lazy(() => import('./pages/Topology'));
+const OpsCenter = lazy(() => import('./pages/OpsCenter'));
 const AppStore = lazy(() => import('./pages/AppStore'));
 const Docker = lazy(() => import('./pages/Docker'));
 const Reports = lazy(() => import('./pages/Reports'));
@@ -82,6 +83,7 @@ function App() {
       '/settings': 'Settings',
       '/ssh': 'SSH Terminal',
       '/rdp': 'Remote Desktop',
+      '/ops-center': 'Ops Center',
       '/topology': 'Network Topology',
       '/app-store': 'App Store',
       '/docker': 'Docker Management',
@@ -113,6 +115,7 @@ function App() {
       <GlobalLiveRegion />
       <ThemeManager />
       <ToastContainer />
+      <KeyboardShortcutsHelper />
       <ShortcutsHelp isOpen={showHelp} onClose={() => setShowHelp(false)} />
       <OnboardingTour
         isOpen={showOnboarding}
@@ -152,7 +155,11 @@ function App() {
           <Route path="/rdp/:rest*">
             <ProtectedRoute component={RDP} />
           </Route>
-          <Route path="/topology" component={() => <ProtectedRoute component={Topology} />} />
+          <Route path="/ops-center" component={() => <ProtectedRoute component={OpsCenter} />} />
+          {/* Backward compatibility redirect */}
+          <Route path="/topology">
+            <Redirect to="/ops-center" />
+          </Route>
           <Route path="/app-store" component={() => <ProtectedRoute component={AppStore} />} />
           <Route path="/docker" component={() => <ProtectedRoute component={Docker} />} />
           <Route path="/reports" component={() => <ProtectedRoute component={Reports} />} />

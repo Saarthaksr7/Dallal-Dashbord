@@ -1,5 +1,8 @@
+/* Import Responsive CSS */
+@import './responsive.css';
+
 :root {
-  /* Dark Mode Palette */
+  /* Dark Mode Palette (Default) */
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
   --text-primary: #f8fafc;
@@ -9,33 +12,56 @@
   --border: #334155;
   --danger: #ef4444;
   --success: #22c55e;
+  --warning: #f59e0b;
+  --info: #06b6d4;
 
   /* Glassmorphism */
   --bg-card: rgba(30, 41, 59, 0.85);
-  /* Slightly more opaque for cards */
   --glass-bg: rgba(30, 41, 59, 0.7);
   --glass-border: rgba(255, 255, 255, 0.08);
-  /* More subtle border */
   --glass-blur: 16px;
-  /* Increased blur */
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
 }
 
 [data-theme='light'] {
-  --bg-primary: #f1f5f9;
+  /* Light Mode Palette */
+  --bg-primary: #f8fafc;
   --bg-secondary: #ffffff;
   --text-primary: #0f172a;
   --text-secondary: #64748b;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
   --border: #e2e8f0;
+  --danger: #dc2626;
+  --success: #16a34a;
+  --warning: #d97706;
+  --info: #0284c7;
+
+  /* Glassmorphism */
   --glass-bg: rgba(255, 255, 255, 0.8);
   --glass-border: rgba(0, 0, 0, 0.08);
   --bg-card: #ffffff;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.15);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.2);
+}
+
+/* Smooth theme transition */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--bg-primary);
-  /* Premium Dark Gradient Background */
+  /* Premium Gradient Background */
   background-image:
     radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.08), transparent 25%),
     radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%);
@@ -84,7 +110,29 @@ button {
   -moz-appearance: none;
 }
 
-/* Glass Utility */
+.content-wrapper {
+  padding: 2rem;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* Page Transitions */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.content-wrapper>* {
+  animation: fadeIn 0.3s ease-out;
+}
+
 .glass-panel {
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
@@ -905,8 +953,6 @@ a:focus-visible,
 }
 
 
-/* Import Responsive CSS */
-@import './responsive.css';
 /* ===================================
    Customizable Dashboard Styles
    =================================== */
@@ -1015,6 +1061,7 @@ a:focus-visible,
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1023,16 +1070,17 @@ a:focus-visible,
 
 /* Responsive Adjustments for Dashboard Customization */
 @media (max-width: 768px) {
+
   .widget-large,
   .widget-full {
     grid-column: span 1;
   }
-  
+
   .widget-controls {
     top: -8px;
     right: -8px;
   }
-  
+
   .widget-controls button {
     width: 32px;
     height: 32px;
@@ -1041,6 +1089,7 @@ a:focus-visible,
 
 /* Print Mode - Hide Controls */
 @media print {
+
   .widget-controls,
   .dashboard-grid-customizable.edit-mode {
     display: none !important;
