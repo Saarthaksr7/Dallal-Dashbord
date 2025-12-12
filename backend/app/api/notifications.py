@@ -118,7 +118,8 @@ async def update_email_settings(settings: EmailSettings):
         
         email_service.configure(
             smtp_config=settings.smtp.dict(),
-            from_config=from_config
+            from_config=from_config,
+            preferences=settings.preferences
         )
         
         # In a real app, save to database
@@ -146,7 +147,7 @@ async def get_email_settings():
     Returns configured SMTP settings (password masked)
     """
     # In a real app, retrieve from database
-    # For now, return empty/default settings
+    # For now, return settings from memory
     return {
         "smtp": {
             "enabled": email_service.smtp_config is not None,
@@ -159,8 +160,8 @@ async def get_email_settings():
             }
         },
         "from": email_service.from_config or {},
-        "recipients": {},
-        "preferences": {}
+        "recipients": {}, # Recipients list needs to be persisted separately ideally, but for now this is fine
+        "preferences": email_service.preferences or {}
     }
 
 

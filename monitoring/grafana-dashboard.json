@@ -1,0 +1,154 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": "-- Grafana --",
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "gnetId": null,
+    "graphTooltip": 0,
+    "id": null,
+    "links": [],
+    "panels": [
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisLabel": "",
+                        "axisPlacement": "auto"
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute"
+                    }
+                }
+            },
+            "title": "HTTP Request Rate",
+            "targets": [
+                {
+                    "expr": "rate(http_requests_total[5m])",
+                    "legendFormat": "{{method}} {{path}}"
+                }
+            ],
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 0
+            },
+            "id": 1,
+            "type": "timeseries"
+        },
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "ms"
+                }
+            },
+            "title": "Response Time (p95)",
+            "targets": [
+                {
+                    "expr": "histogram_quantile(0.95, http_request_duration_seconds_bucket)",
+                    "legendFormat": "p95"
+                },
+                {
+                    "expr": "histogram_quantile(0.50, http_request_duration_seconds_bucket)",
+                    "legendFormat": "p50"
+                }
+            ],
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 0
+            },
+            "id": 2,
+            "type": "timeseries"
+        },
+        {
+            "datasource": "Prometheus",
+            "title": "Email Digest Buffer Size",
+            "targets": [
+                {
+                    "expr": "digest_buffer_size",
+                    "legendFormat": "Buffer Count"
+                }
+            ],
+            "gridPos": {
+                "h": 6,
+                "w": 8,
+                "x": 0,
+                "y": 8
+            },
+            "id": 3,
+            "type": "stat"
+        },
+        {
+            "datasource": "Prometheus",
+            "title": "Active Connections",
+            "targets": [
+                {
+                    "expr": "process_open_fds",
+                    "legendFormat": "Open File Descriptors"
+                }
+            ],
+            "gridPos": {
+                "h": 6,
+                "w": 8,
+                "x": 8,
+                "y": 8
+            },
+            "id": 4,
+            "type": "gauge"
+        },
+        {
+            "datasource": "Prometheus",
+            "title": "Memory Usage",
+            "targets": [
+                {
+                    "expr": "process_resident_memory_bytes / 1024 / 1024",
+                    "legendFormat": "MB"
+                }
+            ],
+            "gridPos": {
+                "h": 6,
+                "w": 8,
+                "x": 16,
+                "y": 8
+            },
+            "id": 5,
+            "type": "gauge"
+        }
+    ],
+    "schemaVersion": 27,
+    "style": "dark",
+    "tags": [
+        "dallal",
+        "monitoring"
+    ],
+    "templating": {
+        "list": []
+    },
+    "time": {
+        "from": "now-6h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "Dallal Dashboard - System Overview",
+    "uid": "dallal-dashboard",
+    "version": 1
+}
