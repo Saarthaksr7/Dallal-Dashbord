@@ -9,10 +9,10 @@ from app.core.config import settings
 from app.core.database import init_db
 from app.core.logging import setup_logging # New import
 from app.api.v1 import services, auth, ssh, docker, settings as settings_router, sftp, keys, audit, webhooks, backup, wol, traps, api_keys, vcs
+from app.api import notifications
 from app.services.status_engine import service_monitor
 from app.services.discovery import discovery_engine
 from app.services.trap_receiver import trap_receiver
-
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
@@ -103,6 +103,7 @@ app.include_router(wol.router, prefix=f"{settings.API_V1_STR}/wol", tags=["wol"]
 app.include_router(traps.router, prefix=f"{settings.API_V1_STR}/traps", tags=["traps"])
 app.include_router(api_keys.router, prefix=f"{settings.API_V1_STR}/api-keys", tags=["api-keys"])
 app.include_router(vcs.router, prefix=f"{settings.API_V1_STR}/vcs", tags=["vcs"])
+app.include_router(notifications.router, prefix="/api", tags=["notifications"])
 
 from app.api.v1 import reports
 app.include_router(reports.router, prefix=f"{settings.API_V1_STR}/reports", tags=["reports"])

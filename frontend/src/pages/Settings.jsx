@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useUIStore } from '../store/ui';
 import { useAuthStore } from '../store/auth';
 import Card from '../components/ui/Card';
-import { Moon, Sun, Monitor, Check, Key, Activity, Webhook as WebhookIcon, Save, Shield, GitBranch, Download, Upload } from 'lucide-react';
+import { Moon, Sun, Monitor, Check, Key, Activity, Webhook as WebhookIcon, Save, Shield, GitBranch, Download, Upload, Mail } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { downloadSettings, parseImportedSettings } from '../utils/settingsBackup';
 
@@ -14,6 +14,7 @@ import WebhookManager from '../components/settings/WebhookManager';
 import AuditLogViewer from '../components/settings/AuditLogViewer';
 import BackupRestore from '../components/settings/BackupRestore';
 import TagManager from '../components/TagManager';
+import EmailNotifications from '../components/settings/EmailNotifications';
 import { resetOnboarding } from '../components/OnboardingTour';
 import { useTagStore } from '../store/tags';
 import { Tag, PlayCircle } from 'lucide-react';
@@ -74,6 +75,7 @@ const Settings = () => {
 
     const tabs = [
         { id: 'general', label: 'General', icon: Monitor },
+        { id: 'notifications', label: 'Notifications', icon: Mail },
         { id: 'scanning', label: 'Scanning', icon: Activity },
         { id: 'keys', label: 'Credentials', icon: Key },
         { id: 'api_keys', label: 'API Access', icon: Shield },
@@ -443,6 +445,7 @@ const Settings = () => {
                         </div>
                     )}
 
+                    {activeTab === 'notifications' && <EmailNotifications />}
                     {activeTab === 'scanning' && <ScanningSettings />}
                     {activeTab === 'keys' && <KeyManager />}
                     {activeTab === 'api_keys' && <ApiKeyManager />}
