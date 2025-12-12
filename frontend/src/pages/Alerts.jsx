@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Card from '../components/ui/Card';
-import { Bell, AlertTriangle, AlertCircle, Info, CheckCircle, Search, Filter, X } from 'lucide-react';
+import { Bell, AlertTriangle, AlertCircle, Info, CheckCircle, Search, Filter, X, Settings } from 'lucide-react';
+import AlertRuleBuilder from '../components/alerts/AlertRuleBuilder';
+import AlertRulesList from '../components/alerts/AlertRulesList';
 
 const Alerts = () => {
     const { t } = useTranslation();
@@ -9,6 +11,8 @@ const Alerts = () => {
     const [filterStatus, setFilterStatus] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedAlert, setSelectedAlert] = useState(null);
+    const [showRulesManager, setShowRulesManager] = useState(false);
+    const [editingRule, setEditingRule] = useState(null);
 
     // Mock alerts data - will be replaced with API call in future
     const mockAlerts = [
@@ -116,13 +120,25 @@ const Alerts = () => {
     return (
         <div>
             <div style={{ marginBottom: '1.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                    <Bell size={28} style={{ color: 'var(--accent)' }} />
-                    <h1 style={{ margin: '0 0 0.5rem 0' }}>{t('monitoring.alerts.title')}</h1>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <Bell size={28} style={{ color: 'var(--accent)' }} aria-hidden="true" />
+                        <div>
+                            <h1 style={{ margin: '0 0 0.5rem 0' }}>{t('monitoring.alerts.title')}</h1>
+                            <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
+                                {t('monitoring.alerts.subtitle')}
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        className="btn btn-primary"
+                        onClick={() => setShowRulesManager(true)}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                    >
+                        <Settings size={18} />
+                        Manage Rules
+                    </button>
                 </div>
-                <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
-                    {t('monitoring.alerts.subtitle')}
-                </p>
             </div>
 
             {/* Filters */}
@@ -147,6 +163,7 @@ const Alerts = () => {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         style={{ paddingLeft: '2.5rem' }}
+                        aria-label="Search alerts by title, message, or service"
                     />
                 </div>
 
@@ -155,6 +172,7 @@ const Alerts = () => {
                     value={filterSeverity}
                     onChange={(e) => setFilterSeverity(e.target.value)}
                     style={{ minWidth: '150px' }}
+                    aria-label="Filter alerts by severity"
                 >
                     <option value="all">All Severities</option>
                     <option value="critical">Critical</option>
@@ -167,6 +185,7 @@ const Alerts = () => {
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
                     style={{ minWidth: '150px' }}
+                    aria-label="Filter alerts by status"
                 >
                     <option value="all">All Status</option>
                     <option value="active">Active</option>
@@ -183,47 +202,62 @@ const Alerts = () => {
             }}>
                 <Card style={{ padding: '1rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                        <AlertTriangle size={18} style={{ color: '#ef4444' }} />
-                        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Critical</span>
+                        <AlertTriangle size={18} style={{ color: '#ef4444' }} aria-hidden="true" />
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }} aria-hidden="true">Critical</span>
                     </div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ef4444' }}>
+                    <div
+                        role="status"
+                        aria-label={`${mockAlerts.filter(a => a.severity === 'critical' && a.status === 'active').length} critical alerts`}
+                        style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ef4444' }}>
                         {mockAlerts.filter(a => a.severity === 'critical' && a.status === 'active').length}
                     </div>
                 </Card>
 
                 <Card style={{ padding: '1rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                        <AlertCircle size={18} style={{ color: '#f59e0b' }} />
-                        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Warnings</span>
+                        <AlertCircle size={18} style={{ color: '#f59e0b' }} aria-hidden="true" />
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }} aria-hidden="true">Warnings</span>
                     </div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f59e0b' }}>
+                    <div
+                        role="status"
+                        aria-label={`${mockAlerts.filter(a => a.severity === 'warning' && a.status === 'active').length} warning alerts`}
+                        style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f59e0b' }}>
                         {mockAlerts.filter(a => a.severity === 'warning' && a.status === 'active').length}
                     </div>
                 </Card>
 
                 <Card style={{ padding: '1rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                        <Bell size={18} style={{ color: 'var(--accent)' }} />
-                        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Active Alerts</span>
+                        <Bell size={18} style={{ color: 'var(--accent)' }} aria-hidden="true" />
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }} aria-hidden="true">Active Alerts</span>
                     </div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+                    <div
+                        role="status"
+                        aria-label={`${mockAlerts.filter(a => a.status === 'active').length} active alerts`}
+                        style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
                         {mockAlerts.filter(a => a.status === 'active').length}
                     </div>
                 </Card>
 
                 <Card style={{ padding: '1rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                        <CheckCircle size={18} style={{ color: '#10b981' }} />
-                        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Resolved</span>
+                        <CheckCircle size={18} style={{ color: '#10b981' }} aria-hidden="true" />
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }} aria-hidden="true">Resolved</span>
                     </div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>
+                    <div
+                        role="status"
+                        aria-label={`${mockAlerts.filter(a => a.status === 'resolved').length} resolved alerts`}
+                        style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>
                         {mockAlerts.filter(a => a.status === 'resolved').length}
                     </div>
                 </Card>
             </div>
 
             {/* Alerts List */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div
+                role="list"
+                aria-label="Alerts list"
+                style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {filteredAlerts.length === 0 ? (
                     <Card>
                         <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
@@ -235,6 +269,9 @@ const Alerts = () => {
                     filteredAlerts.map(alert => (
                         <Card
                             key={alert.id}
+                            role="listitem"
+                            aria-label={`${alert.severity} alert: ${alert.title}, ${alert.status}`}
+                            tabIndex={0}
                             style={{
                                 borderLeft: `4px solid ${getSeverityColor(alert.severity)}`,
                                 cursor: 'pointer',

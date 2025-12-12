@@ -42,8 +42,14 @@ const CommandPalette = () => {
     };
 
     return (
-        <Command.Dialog open={open} onOpenChange={setOpen} label="Global Command Menu" className="cmdk-dialog">
-            <div className="cmdk-overlay" onClick={() => setOpen(false)} />
+        <Command.Dialog
+            open={open}
+            onOpenChange={setOpen}
+            label="Global Command Menu"
+            className="cmdk-dialog"
+            aria-keyshortcuts="Control+k Meta+k"
+        >
+            <div className="cmdk-overlay" onClick={() => setOpen(false)} aria-hidden="true" />
             <div className="cmdk-content">
                 <Command.Input placeholder="Type a command or search..." />
                 <Command.List>

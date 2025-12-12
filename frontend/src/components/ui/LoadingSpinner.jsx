@@ -2,15 +2,21 @@ import React from 'react';
 
 const LoadingSpinner = () => {
     return (
-        <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '100%',
-            minHeight: '200px',
-            color: 'var(--text-secondary)'
-        }}>
-            <div className="spinner"></div>
+        <div
+            role="status"
+            aria-live="polite"
+            aria-busy="true"
+            style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100%',
+                minHeight: '200px',
+                color: 'var(--text-secondary)'
+            }}
+        >
+            <span className="visually-hidden">Loading content...</span>
+            <div className="spinner" aria-hidden="true"></div>
             <style>{`
                 .spinner {
                     width: 40px;

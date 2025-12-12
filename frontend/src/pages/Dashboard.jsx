@@ -17,15 +17,21 @@ const Dashboard = () => {
     return (
         <div>
             {/* Tab Navigation */}
-            <div style={{
-                display: 'flex',
-                gap: '1rem',
-                marginBottom: '2rem',
-                borderBottom: '2px solid var(--border)',
-                paddingBottom: '0'
-            }}>
+            <div
+                role="tablist"
+                aria-label="Dashboard sections"
+                style={{
+                    display: 'flex',
+                    gap: '1rem',
+                    marginBottom: '2rem',
+                    borderBottom: '2px solid var(--border)',
+                    paddingBottom: '0'
+                }}>
                 <a
                     href="/dashboard/overview"
+                    role="tab"
+                    aria-selected={activeTab === 'overview'}
+                    aria-label="Overview dashboard"
                     style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -55,6 +61,9 @@ const Dashboard = () => {
 
                 <a
                     href="/dashboard/favorites"
+                    role="tab"
+                    aria-selected={activeTab === 'favorites'}
+                    aria-label="Favorites dashboard"
                     style={{
                         display: 'flex',
                         alignItems: 'center',

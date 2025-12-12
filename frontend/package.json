@@ -1,13 +1,27 @@
 {
-  "name": "frontend",
-  "private": true,
-  "version": "0.0.0",
+  "name": "dallal-dashboard",
+  "private": false,
+  "version": "2.0.0",
   "type": "module",
+  "description": "Production-ready service management platform for homelabs",
+  "author": "SR7 (Saarthaksr7)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Saarthaksr7/Dallal-Dashbord.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Saarthaksr7/Dallal-Dashbord/issues"
+  },
+  "homepage": "https://github.com/Saarthaksr7/Dallal-Dashbord#readme",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -24,6 +38,7 @@
     "react-dom": "^19.2.0",
     "react-hot-toast": "^2.6.0",
     "react-i18next": "^16.4.0",
+    "react-is": "^19.2.1",
     "reactflow": "^11.11.4",
     "recharts": "^3.5.1",
     "wouter": "^3.8.1",

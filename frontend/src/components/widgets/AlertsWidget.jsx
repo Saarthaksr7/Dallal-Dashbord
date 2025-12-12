@@ -37,18 +37,20 @@ const AlertsWidget = () => {
         <Card style={{ height: '100%' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <Bell size={24} style={{ color: 'var(--accent)' }} />
+                    <Bell size={24} style={{ color: 'var(--accent)' }} aria-hidden="true" />
                     <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '600' }}>{t('dashboard.overview.alerts')}</h3>
                     {totalCount > 0 && (
-                        <span style={{
-                            marginLeft: 'auto',
-                            background: 'var(--accent)',
-                            color: 'white',
-                            padding: '0.25rem 0.5rem',
-                            borderRadius: '12px',
-                            fontSize: '0.75rem',
-                            fontWeight: 'bold'
-                        }}>
+                        <span
+                            aria-label={`${totalCount} total alerts`}
+                            style={{
+                                marginLeft: 'auto',
+                                background: 'var(--accent)',
+                                color: 'white',
+                                padding: '0.25rem 0.5rem',
+                                borderRadius: '12px',
+                                fontSize: '0.75rem',
+                                fontWeight: 'bold'
+                            }}>
                             {totalCount}
                         </span>
                     )}
@@ -61,15 +63,18 @@ const AlertsWidget = () => {
                     paddingBottom: '1rem',
                     borderBottom: '1px solid var(--border)'
                 }}>
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        padding: '0.75rem',
-                        background: 'rgba(239, 68, 68, 0.1)',
-                        borderRadius: '8px'
-                    }}>
-                        <AlertTriangle size={20} style={{ color: '#ef4444' }} />
+                    <div
+                        role="status"
+                        aria-label={`${criticalCount} critical alerts`}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem',
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            borderRadius: '8px'
+                        }}>
+                        <AlertTriangle size={20} style={{ color: '#ef4444' }} aria-hidden="true" />
                         <div>
                             <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ef4444' }}>
                                 {criticalCount}
@@ -80,15 +85,18 @@ const AlertsWidget = () => {
                         </div>
                     </div>
 
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        padding: '0.75rem',
-                        background: 'rgba(245, 158, 11, 0.1)',
-                        borderRadius: '8px'
-                    }}>
-                        <AlertCircle size={20} style={{ color: '#f59e0b' }} />
+                    <div
+                        role="status"
+                        aria-label={`${warningCount} warning alerts`}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem',
+                            background: 'rgba(245, 158, 11, 0.1)',
+                            borderRadius: '8px'
+                        }}>
+                        <AlertCircle size={20} style={{ color: '#f59e0b' }} aria-hidden="true" />
                         <div>
                             <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f59e0b' }}>
                                 {warningCount}

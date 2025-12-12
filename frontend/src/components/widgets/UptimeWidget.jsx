@@ -52,7 +52,10 @@ const UptimeWidget = () => {
                     <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '600' }}>{t('dashboard.overview.uptime')}</h3>
                 </div>
 
-                <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+                <div
+                    role="status"
+                    aria-label={`System uptime is ${uptimePercentage} percent for the last 30 days`}
+                    style={{ textAlign: 'center', padding: '1rem 0' }}>
                     <div style={{
                         fontSize: '3rem',
                         fontWeight: 'bold',
@@ -95,13 +98,16 @@ const UptimeWidget = () => {
                 </div>
 
                 {/* Mini Sparkline */}
-                <div style={{
-                    padding: '1rem',
-                    background: 'var(--bg-secondary)',
-                    borderRadius: '8px',
-                    flex: 1,
-                    minHeight: '60px'
-                }}>
+                <div
+                    role="img"
+                    aria-label="Uptime trend graph showing data over time"
+                    style={{
+                        padding: '1rem',
+                        background: 'var(--bg-secondary)',
+                        borderRadius: '8px',
+                        flex: 1,
+                        minHeight: '60px'
+                    }}>
                     <div style={{
                         display: 'flex',
                         alignItems: 'flex-end',

@@ -80,7 +80,7 @@ const Monitoring = () => {
         <div>
             <div style={{ marginBottom: '1.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                    <Activity size={28} style={{ color: 'var(--accent)' }} />
+                    <Activity size={28} style={{ color: 'var(--accent)' }} aria-hidden="true" />
                     <h1 style={{ margin: '0 0 0.5rem 0' }}>{t('monitoring.metrics.title')}</h1>
                 </div>
                 <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
@@ -113,6 +113,7 @@ const Monitoring = () => {
                             setSelectedService(service);
                         }}
                         style={{ width: '100%' }}
+                        aria-label="Select service to monitor"
                     >
                         {services.map(service => (
                             <option key={service.id} value={service.id}>
@@ -136,6 +137,7 @@ const Monitoring = () => {
                         value={dateRange}
                         onChange={(e) => setDateRange(e.target.value)}
                         style={{ width: '100%' }}
+                        aria-label="Select time range for metrics"
                     >
                         <option value="24h">Last 24 Hours</option>
                         <option value="7d">Last 7 Days</option>
@@ -154,7 +156,7 @@ const Monitoring = () => {
                         marginTop: '1.3rem'
                     }}
                 >
-                    <RefreshCw size={16} className={loading ? 'spin' : ''} />
+                    <RefreshCw size={16} className={loading ? 'spin' : ''} aria-hidden="true" />
                     Refresh
                 </button>
             </div>
@@ -167,32 +169,39 @@ const Monitoring = () => {
                 marginBottom: '1.5rem'
             }}>
                 <Card style={{ padding: '1rem' }}>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }} aria-hidden="true">
                         Avg Response Time
                     </div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent)' }}>
+                    <div
+                        aria-label={`Average response time: ${stats.avg} milliseconds`}
+                        style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent)' }}>
                         {stats.avg} ms
                     </div>
                 </Card>
 
                 <Card style={{ padding: '1rem' }}>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }} aria-hidden="true">
                         Min / Max
                     </div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+                    <div
+                        aria-label={`Minimum response time ${stats.min} milliseconds, maximum ${stats.max} milliseconds`}
+                        style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
                         {stats.min} / {stats.max} ms
                     </div>
                 </Card>
 
                 <Card style={{ padding: '1rem' }}>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }} aria-hidden="true">
                         Uptime
                     </div>
-                    <div style={{
-                        fontSize: '1.5rem',
-                        fontWeight: 'bold',
-                        color: stats.uptime >= 99 ? '#10b981' : stats.uptime >= 95 ? '#f59e0b' : '#ef4444'
-                    }}>
+                    <div
+                        role="status"
+                        aria-label={`Uptime: ${stats.uptime} percent`}
+                        style={{
+                            fontSize: '1.5rem',
+                            fontWeight: 'bold',
+                            color: stats.uptime >= 99 ? '#10b981' : stats.uptime >= 95 ? '#f59e0b' : '#ef4444'
+                        }}>
                         {stats.uptime}%
                     </div>
                 </Card>
@@ -209,9 +218,9 @@ const Monitoring = () => {
 
             {/* Response Time Chart */}
             <Card style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
-                <h3 style={{ margin: '0 0 1rem 0' }}>Response Time Trend</h3>
+                <h3 style={{ margin: '0 0 1rem 0' }} id="response-chart-title">Response Time Trend</h3>
                 {loading ? (
-                    <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
+                    <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }} role="status" aria-live="polite">
                         Loading metrics...
                     </div>
                 ) : chartData.length === 0 ? (

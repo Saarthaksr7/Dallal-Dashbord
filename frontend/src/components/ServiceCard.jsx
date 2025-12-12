@@ -8,8 +8,6 @@ const ServiceCard = ({ service, onAction, onEdit, onDelete, onWake, statusMap, i
     const [, setLocation] = useLocation();
     const isOnline = service.is_active;
     const enabled = service.enabled !== false;
-    const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
-
     // Check dependency status
     let dependencyWarning = false;
     if (service.parent_id && statusMap) {
@@ -33,20 +31,7 @@ const ServiceCard = ({ service, onAction, onEdit, onDelete, onWake, statusMap, i
 
     const handleDelete = (e) => {
         e.stopPropagation();
-        setShowDeleteConfirm(true);
-    };
-
-    const confirmDelete = (e) => {
-        e.stopPropagation();
-        setShowDeleteConfirm(false);
-        if (onDelete) {
-            onDelete(service.id);
-        }
-    };
-
-    const cancelDelete = (e) => {
-        e.stopPropagation();
-        setShowDeleteConfirm(false);
+        if (onDelete) onDelete(service);
     };
 
     const toggleEnabled = (e) => {
@@ -98,69 +83,37 @@ const ServiceCard = ({ service, onAction, onEdit, onDelete, onWake, statusMap, i
                     </div>
                 </div>
             )}
-            {showDeleteConfirm && (
-                <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0,0,0,0.8)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 1000,
-                    borderRadius: '12px',
-                    padding: '20px',
-                    gap: '15px'
-                }}>
-                    <div style={{ color: 'white', fontSize: '16px', textAlign: 'center', fontWeight: 500 }}>
-                        Delete "{service.name}"?
-                    </div>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <button
-                            onClick={confirmDelete}
-                            style={{
-                                padding: '8px 20px',
-                                background: '#ef4444',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                fontWeight: 500
-                            }}
-                        >
-                            Delete
-                        </button>
-                        <button
-                            onClick={cancelDelete}
-                            style={{
-                                padding: '8px 20px',
-                                background: 'rgba(255,255,255,0.1)',
-                                color: 'white',
-                                border: '1px solid rgba(255,255,255,0.2)',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                fontWeight: 500
-                            }}
-                        >
-                            Cancel
-                        </button>
+            {isSelectionMode && (
+                <div className="selection-overlay">
+                    <div className={`checkbox ${isSelected ? 'checked' : ''} `}>
+                        {isSelected && <div className="check-mark">✔</div>}
                     </div>
                 </div>
             )}
             <div className="card-header-row">
                 {isDraggable && (
-                    <div {...dragListeners} className="drag-handle" title="Drag to reorder" style={{ cursor: 'grab', padding: '0 0.5rem', opacity: 0.3 }}>
-                        <GripVertical size={20} />
+                    <div
+                        {...dragListeners}
+                        className="drag-handle"
+                        title="Drag to reorder"
+                        role="button"
+                        aria-label={`Drag handle for ${service.name}. Press Space to pick up, Arrow keys to move, Space to drop.`}
+                        tabIndex={0}
+                        style={{ cursor: 'grab', padding: '0 0.5rem', opacity: 0.3 }}
+                    >
+                        <GripVertical size={20} aria-hidden="true" />
                     </div>
                 )}
                 <div className="icon-wrapper" style={{ position: 'relative' }}>
-                    <Icon size={20} color="var(--text-primary)" />
+                    <Icon size={20} color="var(--text-primary)" aria-hidden="true" />
                     {dependencyWarning && (
-                        <div title="Parent Dependency Offline" style={{ position: 'absolute', top: -5, right: -5, background: '#ef4444', borderRadius: '50%', padding: '2px' }}>
-                            <AlertTriangle size={12} color="white" />
+                        <div
+                            title="Parent Dependency Offline"
+                            role="alert"
+                            aria-label={`Warning: Parent dependency for ${service.name} is offline`}
+                            style={{ position: 'absolute', top: -5, right: -5, background: '#ef4444', borderRadius: '50%', padding: '2px' }}
+                        >
+                            <AlertTriangle size={12} color="white" aria-hidden="true" />
                         </div>
                     )}
                 </div>
@@ -226,32 +179,42 @@ const ServiceCard = ({ service, onAction, onEdit, onDelete, onWake, statusMap, i
 
                     {/* Secondary Info Line */}
                     <div className="service-sub-row" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.25rem' }}>
-                        <div style={{ display: 'flex', gap: '4px' }}>
+                        <div style={{ display: 'flex', gap: '4px' }} role="status" aria-label={`Status: ${service.maintenance ? "Maintenance Mode" : (isOnline ? "Online" : "Offline")}`}>
                             {service.vendor && (
-                                <span className="vendor-badge" style={{ fontSize: '0.7rem', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                                <span className="vendor-badge" aria-label={`Vendor: ${service.vendor}`} style={{ fontSize: '0.7rem', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>
                                     {service.vendor}
                                 </span>
                             )}
                             {/* Status Indicator */}
-                            <div className="status-indicator" title={service.maintenance ? "Maintenance" : (isOnline ? "Online" : "Offline")} role="status">
-                                <div className={`dot ${service.maintenance ? 'maintenance' : (isOnline ? 'online' : 'offline')} `} />
-                                <span className="ms">{!service.maintenance && service.response_time_ms ? `${service.response_time_ms} ms` : ''}</span>
+                            <div className="status-indicator" title={service.maintenance ? "Maintenance" : (isOnline ? "Online" : "Offline")}>
+                                <div className={`dot ${service.maintenance ? 'maintenance' : (isOnline ? 'online' : 'offline')} `} aria-hidden="true" />
+                                <span className="ms" aria-label={`Response time: ${service.response_time_ms} milliseconds`}>{!service.maintenance && service.response_time_ms ? `${service.response_time_ms} ms` : ''}</span>
                             </div>
                         </div>
-                        <span className="service-sub" style={{ opacity: 0.5 }}>
+                        <span className="service-sub" style={{ opacity: 0.5 }} aria-label={`Port: ${service.port || 'Group ' + service.group}`}>
                             {service.port ? `:${service.port} ` : service.group}
                         </span>
 
                         {service.drift_detected && (
-                            <div title="Configuration Drift Detected: Response did not match expected output" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'orange', fontSize: '0.75rem', background: 'rgba(255, 165, 0, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
-                                <GitCommit size={12} />
+                            <div
+                                title="Configuration Drift Detected: Response did not match expected output"
+                                role="alert"
+                                aria-label="Configuration drift detected"
+                                style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'orange', fontSize: '0.75rem', background: 'rgba(255, 165, 0, 0.1)', padding: '2px 6px', borderRadius: '4px' }}
+                            >
+                                <GitCommit size={12} aria-hidden="true" />
                                 <span>Drift</span>
                             </div>
                         )}
 
                         {service.maintenance && (
-                            <div title="Under Maintenance" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#60a5fa', fontSize: '0.75rem', background: 'rgba(96, 165, 250, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
-                                <Wrench size={12} />
+                            <div
+                                title="Under Maintenance"
+                                role="status"
+                                aria-label="Maintenance Mode"
+                                style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#60a5fa', fontSize: '0.75rem', background: 'rgba(96, 165, 250, 0.1)', padding: '2px 6px', borderRadius: '4px' }}
+                            >
+                                <Wrench size={12} aria-hidden="true" />
                                 <span>Maint</span>
                             </div>
                         )}
@@ -578,6 +541,18 @@ const ServiceCard = ({ service, onAction, onEdit, onDelete, onWake, statusMap, i
                     transform: translateX(16px); 
                 }
                 
+                /* Mobile Optimizations - Applied via responsive.css class overrides mostly, 
+                   but these base styles need to support flexibility */
+                
+                @media (max-width: 640px) {
+                    .toggle-switch {
+                        transform: scale(1.1); /* Slightly larger on mobile */
+                    }
+                    .toggle-switch:hover {
+                        transform: scale(1.1); /* Disable hover scale effect on touch */
+                    }
+                }
+
                 .service-card.selected { 
                     border-color: var(--accent); 
                     background: rgba(59, 130, 246, 0.05);

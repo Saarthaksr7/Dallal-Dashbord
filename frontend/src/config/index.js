@@ -36,10 +36,9 @@ export const config = {
         defaultLanguage: import.meta.env.VITE_DEFAULT_LANGUAGE || 'en'
     },
 
-    // Security & Session
     security: {
         sessionTimeout: parseInt(import.meta.env.VITE_SESSION_TIMEOUT) || 60, // minutes
-        tokenRefreshBuffer: parseint(import.meta.env.VITE_TOKEN_REFRESH_BUFFER) || 5 // minutes
+        tokenRefreshBuffer: parseInt(import.meta.env.VITE_TOKEN_REFRESH_BUFFER) || 5 // minutes
     },
 
     // Performance

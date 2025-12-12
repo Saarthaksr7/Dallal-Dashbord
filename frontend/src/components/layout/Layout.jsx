@@ -44,16 +44,27 @@ const Layout = ({ children }) => {
                 closeMobile={() => setMobileOpen(false)}
             />
 
-            <main className={`main-content ${sidebarCollapsed ? 'expanded' : ''}`}>
+            <main
+                className={`main-content ${sidebarCollapsed ? 'expanded' : ''}`}
+                id="main-content"
+                role="main"
+                aria-label="Main content"
+            >
                 {/* Mobile Header */}
                 <header className="mobile-header">
-                    <button onClick={() => setMobileOpen(true)} className="menu-btn" aria-label="Open sidebar menu">
+                    <button
+                        onClick={() => setMobileOpen(true)}
+                        className="menu-btn"
+                        aria-label="Open navigation menu"
+                        aria-expanded={mobileOpen}
+                        aria-controls="sidebar-navigation"
+                    >
                         <Menu size={24} />
                     </button>
                     <span className="mobile-title">Dallal Dashboard</span>
                 </header>
 
-                <div className="content-wrapper">
+                <div className="content-wrapper" style={{ paddingTop: mobileOpen ? '60px' : '' }}>
                     {children}
                 </div>
             </main>

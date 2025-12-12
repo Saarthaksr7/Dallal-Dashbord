@@ -49,7 +49,13 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
                 <div
                     className="mobile-overlay"
                     onClick={closeMobile}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                            closeMobile();
+                        }
+                    }}
                     role="presentation"
+                    aria-hidden="true"
                     style={{
                         position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 40
                     }}
@@ -57,18 +63,51 @@ const Sidebar = ({ isCollapsed, toggleSidebar, mobileOpen, closeMobile }) => {
             )}
 
             <aside
+                id="sidebar-navigation"
                 className={`sidebar glass-panel ${isCollapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''} ${i18n.language === 'ar' ? 'rtl' : ''}`}
+                aria-label="Main navigation"
             >
+                {/* Mobile Close Button */}
+                {mobileOpen && (
+                    <button
+                        onClick={closeMobile}
+                        className="mobile-close-btn"
+                        aria-label="Close menu"
+                        style={{
+                            position: 'absolute',
+                            top: '1rem',
+                            right: '1rem',
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'var(--text-secondary)',
+                            padding: '8px',
+                            cursor: 'pointer',
+                            zIndex: 101, // Above everything
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            minHeight: '44px',
+                            minWidth: '44px'
+                        }}
+                    >
+                        <X size={24} />
+                    </button>
+                )}
                 {/* Header */}
                 <div className="sidebar-header">
                     {!isCollapsed && <span className="logo-text">Dallal</span>}
-                    <button onClick={toggleSidebar} className="collapse-btn" aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
+                    <button
+                        onClick={toggleSidebar}
+                        className="collapse-btn"
+                        aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                        aria-expanded={!isCollapsed}
+                    >
                         {isCollapsed ? (i18n.language === 'ar' ? <ChevronLeft size={20} /> : <ChevronRight size={20} />) : (i18n.language === 'ar' ? <ChevronRight size={20} /> : <ChevronLeft size={20} />)}
                     </button>
                 </div>
 
                 {/* Nav */}
-                <nav className="sidebar-nav">
+                <nav className="sidebar-nav" role="navigation" aria-label="Main">
                     {navItems.map((item) => (
                         <Link key={item.path} href={item.path}>
                             <div

@@ -4,11 +4,16 @@ import ServiceCard from '../components/ServiceCard';
 import ServiceWizard from '../components/ServiceWizard';
 import ServiceEditDialog from '../components/ServiceEditDialog';
 import ServiceDetails from '../components/ServiceDetails';
-import { Plus, CheckSquare, Trash2, Zap, X, Wrench } from 'lucide-react';
+import { Plus, CheckSquare, Trash2, Zap, X, Wrench, FileDown } from 'lucide-react';
 import { useAuthStore } from '../store/auth';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
+import ImportExportDialog from '../components/ImportExportDialog';
+import Tooltip from '../components/ui/Tooltip';
 
 import { useServicesStore } from '../store/services';
+import { useUIStore } from '../store/ui';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
 import {
     DndContext,
     closestCenter,
@@ -69,6 +74,7 @@ const Services = () => {
     const token = useAuthStore((state) => state.token);
     const user = useAuthStore((state) => state.user);
     const updatePreferences = useAuthStore((state) => state.updatePreferences);
+    const { addToast } = useUIStore();
 
     const [showWizard, setShowWizard] = useState(false);
 
@@ -116,6 +122,14 @@ const Services = () => {
 
     // Details Modal State
     const [selectedService, setSelectedService] = useState(null);
+
+    // Confirmation Dialog State
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [serviceToDelete, setServiceToDelete] = useState(null);
+    const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
+    // Import/Export Dialog State
+    const [showImportExport, setShowImportExport] = useState(false);
 
     // Handle Drag End
     const handleDragEnd = (event) => {
@@ -219,35 +233,42 @@ const Services = () => {
             fetchServices(true);
         } catch (err) {
             setServices(previousServices); // Revert Store
-            alert(err.message || "Action failed");
+            addToast(err.message || "Action failed", 'error');
         }
     };
 
-    const handleOptimisticDelete = async (id) => {
+    const handleDeleteClick = (service) => {
+        setServiceToDelete(service);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!serviceToDelete) return;
+
         const previousServices = [...services];
-        removeService(id); // Store Action
+        removeService(serviceToDelete.id);
 
         setSelectedIds(prev => {
             const next = new Set(prev);
-            next.delete(id);
+            next.delete(serviceToDelete.id);
             return next;
         });
 
         try {
-            await api.delete(`/services/${id}`);
+            await api.delete(`/services/${serviceToDelete.id}`);
             fetchServices(true);
         } catch (err) {
             setServices(previousServices);
-            alert(err.message || "Delete failed");
+            addToast(err.message || "Delete failed", 'error');
         }
     };
 
     const handleOptimisticWake = async (mac) => {
         try {
             await api.post('/wol/wake', { mac_address: mac });
-            alert(`Sent magic packet to ${mac}`);
+            addToast(`Sent magic packet to ${mac}`, 'success');
         } catch (err) {
-            alert(err.message);
+            addToast(err.message, 'error');
         }
     };
 
@@ -265,15 +286,18 @@ const Services = () => {
         try {
             await api.put(`/services/${serviceToEdit.id}`, serviceToEdit);
             fetchServices(true);
+            addToast(`Updated ${serviceToEdit.name}`, 'success');
         } catch (err) {
             setServices(previousServices);
-            alert(err.message || "Update failed");
+            addToast(err.message || "Update failed", 'error');
         }
     };
 
-    const handleBulkDelete = async () => {
-        if (!confirm(`Delete ${selectedIds.size} services?`)) return;
+    const handleBulkDeleteClick = () => {
+        setShowBulkDeleteConfirm(true);
+    };
 
+    const confirmBulkDelete = async () => {
         const previousServices = [...services];
         const ids = Array.from(selectedIds);
 
@@ -294,6 +318,26 @@ const Services = () => {
         }
     };
 
+    const handleImportServices = async (importedServices) => {
+        try {
+            const results = await Promise.allSettled(
+                importedServices.map(service => api.post('/services', service))
+            );
+
+            const succeeded = results.filter(r => r.status === 'fulfilled').length;
+            const failed = results.filter(r => r.status === 'rejected').length;
+
+            if (succeeded > 0) {
+                fetchServices(true);
+                addToast(`Imported ${succeeded} services (${failed} failed)`, failed > 0 ? 'warning' : 'success');
+            } else {
+                addToast('Failed to import services', 'error');
+            }
+        } catch (err) {
+            addToast('Import failed: ' + err.message, 'error');
+        }
+    };
+
     return (
         <div>
             {/* ... (Header same) ... */}
@@ -301,27 +345,47 @@ const Services = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h1 style={{ margin: 0 }}>Services</h1>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button
-                            className={`btn ${isSelectionMode ? 'btn-active' : ''}`}
-                            style={{
-                                display: 'flex', alignItems: 'center', gap: '0.5rem',
-                                background: isSelectionMode ? 'var(--accent)' : 'var(--bg-secondary)',
-                                border: '1px solid var(--border)', color: isSelectionMode ? 'white' : 'var(--text-primary)'
-                            }}
-                            onClick={() => {
-                                setIsSelectionMode(!isSelectionMode);
-                                setSelectedIds(new Set());
-                            }}
-                        >
-                            <CheckSquare size={18} /> {isSelectionMode ? 'Cancel Selection' : 'Select'}
-                        </button>
-                        <button
-                            className="btn btn-primary"
-                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                            onClick={() => setShowWizard(true)}
-                        >
-                            <Plus size={18} /> Add Service
-                        </button>
+                        <Tooltip content="Export services to JSON/CSV or import from a backup file">
+                            <button
+                                className="btn"
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                    background: 'var(--bg-secondary)',
+                                    border: '1px solid var(--border)',
+                                }}
+                                onClick={() => setShowImportExport(true)}
+                                aria-label="Import or export services"
+                            >
+                                <FileDown size={18} /> Import/Export
+                            </button>
+                        </Tooltip>
+                        <Tooltip content={isSelectionMode ? "Exit multi-select mode" : "Select multiple services for bulk operations"}>
+                            <button
+                                className={`btn ${isSelectionMode ? 'btn-active' : ''}`}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                    background: isSelectionMode ? 'var(--accent)' : 'var(--bg-secondary)',
+                                    border: '1px solid var(--border)', color: isSelectionMode ? 'white' : 'var(--text-primary)'
+                                }}
+                                onClick={() => {
+                                    setIsSelectionMode(!isSelectionMode);
+                                    setSelectedIds(new Set());
+                                }}
+                                aria-label={isSelectionMode ? "Cancel selection mode" : "Enable selection mode"}
+                            >
+                                <CheckSquare size={18} /> {isSelectionMode ? 'Cancel Selection' : 'Select'}
+                            </button>
+                        </Tooltip>
+                        <Tooltip content="Add a new service to monitor (Shortcut: N)" position="bottom">
+                            <button
+                                className="btn btn-primary add-service-btn"
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                                onClick={() => setShowWizard(true)}
+                                aria-label="Add new service"
+                            >
+                                <Plus size={18} /> Add Service
+                            </button>
+                        </Tooltip>
                     </div>
                 </div>
 
@@ -333,59 +397,68 @@ const Services = () => {
                 }}>
                     {/* ... (Search/Filter inputs same) ... */}
                     {/* Search */}
-                    <div style={{ position: 'relative', flex: 1, minWidth: '240px' }}>
-                        <input
-                            ref={searchInputRef}
-                            type="text"
-                            placeholder="Search by Name, IP, Vendor, Tags..."
-                            className="input-field"
-                            style={{ paddingLeft: '2.5rem' }}
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                        <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+                    <Tooltip content="Press / to focus search. Search by name, IP, vendor, or tags" position="bottom">
+                        <div style={{ position: 'relative', flex: 1, minWidth: '240px' }} className="search-input">
+                            <input
+                                ref={searchInputRef}
+                                type="text"
+                                placeholder="Search by Name, IP, Vendor, Tags..."
+                                className="input-field"
+                                style={{ paddingLeft: '2.5rem' }}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                aria-label="Search services"
+                            />
+                            <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+                            </div>
                         </div>
-                    </div>
+                    </Tooltip>
 
                     {/* Filter */}
-                    <select
-                        className="input-field"
-                        style={{ width: 'auto', minWidth: '140px' }}
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        aria-label="Filter by Status"
-                    >
-                        <option value="all">Status: All</option>
-                        <option value="online">Online</option>
-                        <option value="offline">Offline</option>
-                    </select>
+                    <Tooltip content="Filter services by their online/offline status" position="bottom">
+                        <select
+                            className="input-field"
+                            style={{ width: 'auto', minWidth: '140px' }}
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            aria-label="Filter by Status"
+                        >
+                            <option value="all">Status: All</option>
+                            <option value="online">Online</option>
+                            <option value="offline">Offline</option>
+                        </select>
+                    </Tooltip>
 
                     {/* Group By */}
-                    <select
-                        className="input-field"
-                        style={{ width: 'auto', minWidth: '140px' }}
-                        value={groupBy}
-                        onChange={(e) => setGroupBy(e.target.value)}
-                        aria-label="Group By"
-                    >
-                        <option value="none">Group: None</option>
-                        <option value="group">Group: Group</option>
-                    </select>
+                    <Tooltip content="Group services by category for better organization" position="bottom">
+                        <select
+                            className="input-field"
+                            style={{ width: 'auto', minWidth: '140px' }}
+                            value={groupBy}
+                            onChange={(e) => setGroupBy(e.target.value)}
+                            aria-label="Group By"
+                        >
+                            <option value="none">Group: None</option>
+                            <option value="group">Group: Group</option>
+                        </select>
+                    </Tooltip>
 
                     {/* Sort */}
-                    <select
-                        className="input-field"
-                        style={{ width: 'auto', minWidth: '140px' }}
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
-                        aria-label="Sort By"
-                    >
-                        <option value="name">Sort: Name</option>
-                        <option value="ip">Sort: IP</option>
-                        <option value="status">Sort: Status</option>
-                        <option value="custom">Sort: Custom (Drag)</option>
-                    </select>
+                    <Tooltip content="Choose how to sort your services. Custom allows drag-and-drop reordering" position="bottom">
+                        <select
+                            className="input-field"
+                            style={{ width: 'auto', minWidth: '140px' }}
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            aria-label="Sort By"
+                        >
+                            <option value="name">Sort: Name</option>
+                            <option value="ip">Sort: IP</option>
+                            <option value="status">Sort: Status</option>
+                            <option value="custom">Sort: Custom (Drag)</option>
+                        </select>
+                    </Tooltip>
                 </div>
             </div>
 
@@ -396,7 +469,9 @@ const Services = () => {
             )}
 
             {loading && services.length === 0 ? (
-                <p>Loading...</p>
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>
+                    <LoadingSpinner />
+                </div>
             ) : filteredServices.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
                     <p>No services found matching your criteria.</p>
@@ -424,7 +499,7 @@ const Services = () => {
                                         onAction={handleOptimisticAction}
                                         onWake={handleOptimisticWake}
                                         onEdit={handleOptimisticEdit}
-                                        onDelete={handleOptimisticDelete}
+                                        onDelete={handleDeleteClick}
                                     />
                                 ))}
                             </div>
@@ -513,7 +588,7 @@ const Services = () => {
                     <span style={{ fontWeight: 'bold' }}>{selectedIds.size} Selected</span>
 
                     <div style={{ display: 'flex', gap: '1rem' }}>
-                        <button className="btn" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid #ef4444' }} onClick={handleBulkDelete}>
+                        <button className="btn" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid #ef4444' }} onClick={handleBulkDeleteClick}>
                             <Trash2 size={18} style={{ marginRight: '0.5rem' }} /> Delete
                         </button>
 
@@ -521,11 +596,11 @@ const Services = () => {
                             // WoL Action
                             Promise.all(Array.from(selectedIds).map(id => api.post(`/services/${id}/wake`)))
                                 .then(() => {
-                                    alert(`Sent Wake-on-LAN packets.`);
+                                    addToast(`Sent Wake-on-LAN packets`, 'success');
                                     setSelectedIds(new Set());
                                     setIsSelectionMode(false);
                                 })
-                                .catch(err => alert("Failed to send WoL: " + err));
+                                .catch(err => addToast("Failed to send WoL: " + err, 'error'));
                         }}>
                             <Zap size={18} style={{ marginRight: '0.5rem' }} /> Wake
                         </button>
@@ -553,6 +628,43 @@ const Services = () => {
                     </button>
                 </div>
             )
+            }
+
+            {/* Delete Confirmation Dialogs */}
+            <ConfirmDialog
+                open={showDeleteConfirm}
+                title="Delete Service?"
+                message={`Are you sure you want to delete "${serviceToDelete?.name}"? This action cannot be undone.`}
+                confirmText="Delete"
+                cancelText="Cancel"
+                onConfirm={confirmDelete}
+                onCancel={() => {
+                    setShowDeleteConfirm(false);
+                    setServiceToDelete(null);
+                }}
+                variant="danger"
+            />
+
+            <ConfirmDialog
+                open={showBulkDeleteConfirm}
+                title="Delete Multiple Services?"
+                message={`Are you sure you want to delete ${selectedIds.size} services? This action cannot be undone.`}
+                confirmText="Delete All"
+                cancelText="Cancel"
+                onConfirm={confirmBulkDelete}
+                onCancel={() => setShowBulkDeleteConfirm(false)}
+                variant="danger"
+            />
+
+            {/* Import/Export Dialog */}
+            {
+                showImportExport && (
+                    <ImportExportDialog
+                        services={services}
+                        onImport={handleImportServices}
+                        onClose={() => setShowImportExport(false)}
+                    />
+                )
             }
         </div >
     );

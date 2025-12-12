@@ -1,11 +1,18 @@
 import React from 'react';
 
 const Card = ({ children, className = '', title, actions, ...props }) => {
+    // Generate a unique ID if title is present to associate content
+    const titleId = title ? `card-title-${Math.random().toString(36).substr(2, 9)}` : undefined;
+
     return (
-        <div className={`glass-panel card ${className}`} {...props}>
+        <div
+            className={`glass-panel card ${className}`}
+            {...props}
+            aria-labelledby={titleId}
+        >
             {(title || actions) && (
                 <div className="card-header">
-                    {title && <h3 className="card-title">{title}</h3>}
+                    {title && <h3 id={titleId} className="card-title">{title}</h3>}
                     {actions && <div className="card-actions">{actions}</div>}
                 </div>
             )}

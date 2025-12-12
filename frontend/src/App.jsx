@@ -1,5 +1,5 @@
 import React, { useEffect, Suspense, lazy } from 'react';
-import { Route, Switch, Redirect } from 'wouter';
+import { Route, Switch, Redirect, useLocation } from 'wouter';
 import { useAuthStore } from './store/auth';
 import { useUIStore } from './store/ui';
 import Card from './components/ui/Card';
@@ -10,6 +10,9 @@ import ShortcutsHelp from './components/ShortcutsHelp';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import ErrorBoundary from './components/ErrorBoundary';
+import SkipLinks from './components/ui/SkipLinks';
+import { GlobalLiveRegion } from './components/ui/LiveRegion';
+import OnboardingTour, { shouldShowOnboarding } from './components/OnboardingTour';
 
 // Lazy Load Pages
 const Login = lazy(() => import('./pages/Login'));
@@ -25,6 +28,7 @@ const AppStore = lazy(() => import('./pages/AppStore'));
 const Docker = lazy(() => import('./pages/Docker'));
 const Reports = lazy(() => import('./pages/Reports'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const ComponentDemo = lazy(() => import('./pages/ComponentDemo'));
 
 // Protected Route Component
 const ProtectedRoute = ({ component: Component, ...rest }) => {
@@ -43,6 +47,21 @@ const ProtectedRoute = ({ component: Component, ...rest }) => {
 
 function App() {
   const [showHelp, setShowHelp] = React.useState(false);
+  const [showOnboarding, setShowOnboarding] = React.useState(false);
+  const [location] = useLocation();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
+
+  // Check if onboarding should be shown on first authenticated visit
+  React.useEffect(() => {
+    if (isAuthenticated && shouldShowOnboarding()) {
+      // Add a small delay to let the app fully load
+      const timer = setTimeout(() => {
+        setShowOnboarding(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated]);
 
   useKeyboardShortcuts({
     '?': () => setShowHelp(prev => !prev),
@@ -52,11 +71,54 @@ function App() {
     'Escape': () => setShowHelp(false)
   });
 
+  // Update document title and announce route changes for screen readers
+  useEffect(() => {
+    const pageTitles = {
+      '/login': 'Login',
+      '/dashboard': 'Dashboard',
+      '/services': 'Services',
+      '/monitoring': 'Monitoring',
+      '/alerts': 'Alerts',
+      '/settings': 'Settings',
+      '/ssh': 'SSH Terminal',
+      '/rdp': 'Remote Desktop',
+      '/topology': 'Network Topology',
+      '/app-store': 'App Store',
+      '/docker': 'Docker Management',
+      '/reports': 'Reports'
+    };
+
+    const currentPath = location.split('?')[0];
+    let title = 'Dallal Dashboard';
+
+    for (const [path, pageTitle] of Object.entries(pageTitles)) {
+      if (currentPath.startsWith(path)) {
+        title = `${pageTitle} - Dallal Dashboard`;
+        break;
+      }
+    }
+
+    document.title = title;
+
+    // Announce page change to screen readers
+    if (window.announceToScreenReader) {
+      const pageName = title.replace(' - Dallal Dashboard', '');
+      window.announceToScreenReader(`Navigated to ${pageName}`, 'polite');
+    }
+  }, [location]);
+
   return (
     <ErrorBoundary>
+      <SkipLinks />
+      <GlobalLiveRegion />
       <ThemeManager />
       <ToastContainer />
       <ShortcutsHelp isOpen={showHelp} onClose={() => setShowHelp(false)} />
+      <OnboardingTour
+        isOpen={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+        userRole={user?.role || 'user'}
+      />
 
       <Suspense fallback={<LoadingSpinner />}>
         <Switch>
@@ -94,6 +156,7 @@ function App() {
           <Route path="/app-store" component={() => <ProtectedRoute component={AppStore} />} />
           <Route path="/docker" component={() => <ProtectedRoute component={Docker} />} />
           <Route path="/reports" component={() => <ProtectedRoute component={Reports} />} />
+          <Route path="/demo" component={() => <ProtectedRoute component={ComponentDemo} />} />
           <Route path="/settings">
             {/* Only Admin can access Settings */}
             {(params) => {
@@ -111,3 +174,5 @@ function App() {
 }
 
 export default App;
+
+import './responsive.css';

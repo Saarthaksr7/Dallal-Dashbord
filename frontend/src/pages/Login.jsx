@@ -54,42 +54,60 @@ const Login = () => {
                 </div>
 
                 {error && (
-                    <div style={{
-                        background: 'rgba(239, 68, 68, 0.1)',
-                        color: 'var(--danger)',
-                        padding: '0.75rem',
-                        borderRadius: '0.375rem',
-                        marginBottom: '1.5rem',
-                        fontSize: '0.9rem',
-                        textAlign: 'center'
-                    }}>
+                    <div
+                        role="alert"
+                        aria-live="polite"
+                        style={{
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            color: 'var(--danger)',
+                            padding: '0.75rem',
+                            borderRadius: '0.375rem',
+                            marginBottom: '1.5rem',
+                            fontSize: '0.9rem',
+                            textAlign: 'center'
+                        }}
+                    >
                         {t('login.error_generic')}
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} aria-label="Login form">
                     <div style={{ marginBottom: '1.25rem', position: 'relative' }}>
-                        <User size={18} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-secondary)' }} />
+                        <label htmlFor="username" className="visually-hidden">{t('login.username')}</label>
+                        <User size={18} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-secondary)', pointerEvents: 'none' }} aria-hidden="true" />
                         <input
+                            id="username"
+                            name="username"
                             type="text"
                             className="input-field"
                             style={{ paddingLeft: '40px' }}
                             placeholder={t('login.username')}
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
+                            aria-invalid={error ? 'true' : 'false'}
+                            aria-required="true"
+                            required
                             autoFocus
+                            autoComplete="username"
                         />
                     </div>
 
                     <div style={{ marginBottom: '1.5rem', position: 'relative' }}>
-                        <Lock size={18} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-secondary)' }} />
+                        <label htmlFor="password" className="visually-hidden">{t('login.password')}</label>
+                        <Lock size={18} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-secondary)', pointerEvents: 'none' }} aria-hidden="true" />
                         <input
+                            id="password"
+                            name="password"
                             type="password"
                             className="input-field"
                             style={{ paddingLeft: '40px' }}
                             placeholder={t('login.password')}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                            aria-invalid={error ? 'true' : 'false'}
+                            aria-required="true"
+                            required
+                            autoComplete="current-password"
                         />
                     </div>
 
@@ -98,8 +116,10 @@ const Login = () => {
                         className="btn btn-primary"
                         style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
                         disabled={isSubmitting}
+                        aria-busy={isSubmitting}
                     >
-                        {isSubmitting ? <Loader2 className="animate-spin" size={18} style={{ animation: 'spin 1s linear infinite' }} /> : t('login.signin')}
+                        {isSubmitting && <span className="visually-hidden">Signing in, please wait</span>}
+                        {isSubmitting ? <Loader2 className="animate-spin" size={18} style={{ animation: 'spin 1s linear infinite' }} aria-hidden="true" /> : t('login.signin')}
                     </button>
                 </form>
 
