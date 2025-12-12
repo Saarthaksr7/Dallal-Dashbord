@@ -1,7 +1,5 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { visualizer } from 'rollup-plugin-visualizer'
-import { compression } from 'vite-plugin-compression2'
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -10,26 +8,6 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       react(),
-
-      // Gzip compression for production
-      isProduction && compression({
-        algorithm: 'gzip',
-        exclude: [/\.(br)$/, /\.(gz)$/],
-      }),
-
-      // Brotli compression for production (better than gzip)
-      isProduction && compression({
-        algorithm: 'brotliCompress',
-        exclude: [/\.(br)$/, /\.(gz)$/],
-      }),
-
-      // Bundle analyzer for production builds
-      isProduction && visualizer({
-        filename: './dist/stats.html',
-        open: false,
-        gzipSize: true,
-        brotliSize: true,
-      }),
     ].filter(Boolean),
 
     // Build optimizations
