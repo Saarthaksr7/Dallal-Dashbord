@@ -85,6 +85,16 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
 
+# CORS - Configure based on environment (ADD FIRST so it processes LAST)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Temporarily allow all for development
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=["*"],
+    expose_headers=["X-Total-Count", "X-Page-Count"]
+)
+
 # Security Headers Middleware
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
@@ -96,16 +106,6 @@ async def add_security_headers(request: Request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     return response
-
-# CORS - Configure based on environment
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS if not settings.is_development else ["*"],
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allow_headers=["*"],
-    expose_headers=["X-Total-Count", "X-Page-Count"]
-)
 
 # Global Exception Handler
 @app.exception_handler(Exception)

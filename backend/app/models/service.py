@@ -23,6 +23,10 @@ class Service(SQLModel, table=True):
     mac_address: Optional[str] = Field(default=None)
     vendor: Optional[str] = Field(default=None)
     
+    # Organization
+    group: Optional[str] = Field(default="Default")  # Service group
+    tags: Optional[str] = Field(default=None)  # Comma-separated tags
+    
     # SSH Credentials (will be encrypted in production)
     ssh_username: Optional[str] = Field(default=None)
     ssh_password: Optional[str] = Field(default=None)

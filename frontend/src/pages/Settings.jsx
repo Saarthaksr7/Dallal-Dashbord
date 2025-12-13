@@ -21,7 +21,7 @@ import { Tag, PlayCircle } from 'lucide-react';
 
 const Settings = () => {
     const { t } = useTranslation();
-    const { theme, setTheme, accentColor, setAccentColor } = useUIStore();
+    const { theme, setTheme, accentColor, setAccentColor, addToast } = useUIStore();
     const user = useAuthStore((state) => state.user);
     const [activeTab, setActiveTab] = useState('general');
     const [showTagManager, setShowTagManager] = useState(false);
@@ -56,7 +56,10 @@ const Settings = () => {
 
     const handleRestartTour = () => {
         resetOnboarding();
-        alert('Onboarding tour reset! Refresh the page to start the tour again.');
+        addToast('Onboarding tour reset! The page will refresh in 2 seconds...', 'success');
+        setTimeout(() => {
+            window.location.reload();
+        }, 2000);
     };
 
     const handleSaveTags = (updatedTags) => {
@@ -103,7 +106,7 @@ const Settings = () => {
                             aria-label={`${tab.label} settings`}
                             onClick={() => setActiveTab(tab.id)}
                             style={{
-                                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                display: 'flex', alignItems: 'center', gap: '0.75rem',
                                 background: 'transparent',
                                 border: 'none',
                                 borderBottom: activeTab === tab.id ? '2px solid var(--accent)' : '2px solid transparent',
@@ -117,7 +120,7 @@ const Settings = () => {
                                 listStyle: 'none'
                             }}
                         >
-                            <tab.icon size={22} aria-hidden="true" />
+                            <tab.icon size={28} aria-hidden="true" />
                             {tab.label}
                         </button>
                     ))}
@@ -142,7 +145,7 @@ const Settings = () => {
                                                 aria-label={`Set ${t.label} theme`}
                                                 aria-pressed={theme === t.id}
                                             >
-                                                <t.icon size={18} aria-hidden="true" />
+                                                <t.icon size={24} aria-hidden="true" />
                                                 <span>{t.label}</span>
                                             </button>
                                         ))}
@@ -277,7 +280,7 @@ const Settings = () => {
                                                 fontWeight: 500
                                             }}
                                         >
-                                            <Download size={18} />
+                                            <Download size={24} />
                                             Export Settings
                                         </button>
 
@@ -294,7 +297,7 @@ const Settings = () => {
                                                 fontWeight: 500
                                             }}
                                         >
-                                            <Upload size={18} />
+                                            <Upload size={24} />
                                             Import Settings
                                             <input
                                                 type="file"
@@ -351,7 +354,7 @@ const Settings = () => {
                                                 }}
                                                 aria-label="Manage tags"
                                             >
-                                                <Tag size={16} />
+                                                <Tag size={24} />
                                                 Manage Tags
                                             </button>
                                         </div>
@@ -427,7 +430,7 @@ const Settings = () => {
                                         }}
                                         aria-label="Restart onboarding tour"
                                     >
-                                        <PlayCircle size={18} />
+                                        <PlayCircle size={24} />
                                         Restart Tour
                                     </button>
 

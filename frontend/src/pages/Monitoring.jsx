@@ -14,6 +14,7 @@ const Monitoring = () => {
     const [loading, setLoading] = useState(false);
     const [dateRange, setDateRange] = useState('24h');
     const [metricType, setMetricType] = useState('response_time');
+    const [isLiveMode, setIsLiveMode] = useState(false);
 
     useEffect(() => {
         if (services.length > 0 && !selectedService) {
@@ -27,13 +28,39 @@ const Monitoring = () => {
         }
     }, [selectedService, dateRange]);
 
+    // Live mode auto-refresh
+    useEffect(() => {
+        if (!isLiveMode || !selectedService) return;
+
+        const interval = setInterval(() => {
+            fetchHistory();
+        }, 10000); // Refresh every 10 seconds
+
+        return () => clearInterval(interval);
+    }, [isLiveMode, selectedService]);
+
     const fetchHistory = async () => {
         if (!selectedService) return;
 
         setLoading(true);
         try {
-            const limit = dateRange === '24h' ? 288 : dateRange === '7d' ? 168 : 720; // 5min intervals
-            const res = await api.get(`/ services / ${selectedService.id}/history?limit=${limit}`);
+            // Calculate limit based on time range
+            const limits = {
+                'live': 60,      // Last 60 data points (5min if 5sec intervals)
+                '5m': 60,        // 5 minutes
+                '10m': 120,      // 10 minutes
+                '15m': 180,      // 15 minutes
+                '30m': 360,      // 30 minutes
+                '1h': 720,       // 1 hour
+                '3h': 2160,      // 3 hours
+                '6h': 4320,      // 6 hours
+                '12h': 8640,     // 12 hours
+                '24h': 288,      // 24 hours (5min intervals)
+                '7d': 168,       // 7 days (hourly)
+                '30d': 720       // 30 days (hourly)
+            };
+            const limit = limits[dateRange] || 288;
+            const res = await api.get(`/services/${selectedService.id}/history?limit=${limit}`);
             setHistoryData(res.data.reverse());
         } catch (err) {
             console.error('Failed to fetch history', err);
@@ -49,7 +76,7 @@ const Monitoring = () => {
                 minute: '2-digit',
                 hour12: false
             }),
-            response_time: item.response_time_ms || 0,
+            response_time: item.latency_ms || 0,
             is_active: item.is_active ? 100 : 0,
             timestamp: item.timestamp
         }));
@@ -58,7 +85,7 @@ const Monitoring = () => {
     const calculateStats = () => {
         if (historyData.length === 0) return { avg: 0, min: 0, max: 0, uptime: 0 };
 
-        const responseTimes = historyData.map(h => h.response_time_ms || 0).filter(t => t > 0);
+        const responseTimes = historyData.map(h => h.latency_ms || 0).filter(t => t > 0);
         const avg = responseTimes.length > 0
             ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
             : 0;
@@ -146,11 +173,31 @@ const Monitoring = () => {
                     </label>
                     <select
                         className="input-field"
-                        value={dateRange}
-                        onChange={(e) => setDateRange(e.target.value)}
+                        value={isLiveMode ? 'live' : dateRange}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === 'live') {
+                                setIsLiveMode(true);
+                                setDateRange('5m');
+                            } else {
+                                setIsLiveMode(false);
+                                setDateRange(val);
+                            }
+                        }}
                         style={{ width: '100%' }}
                         aria-label="Select time range for metrics"
                     >
+                        <option value="live">🔴 Live (Auto-refresh)</option>
+                        <option disabled>─────────────────</option>
+                        <option value="5m">Last 5 Minutes</option>
+                        <option value="10m">Last 10 Minutes</option>
+                        <option value="15m">Last 15 Minutes</option>
+                        <option value="30m">Last 30 Minutes</option>
+                        <option value="1h">Last 1 Hour</option>
+                        <option value="3h">Last 3 Hours</option>
+                        <option value="6h">Last 6 Hours</option>
+                        <option value="12h">Last 12 Hours</option>
+                        <option disabled>─────────────────</option>
                         <option value="24h">Last 24 Hours</option>
                         <option value="7d">Last 7 Days</option>
                         <option value="30d">Last 30 Days</option>
@@ -165,11 +212,24 @@ const Monitoring = () => {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '0.5rem',
-                        marginTop: '1.3rem'
+                        marginTop: '1.3rem',
+                        position: 'relative'
                     }}
                 >
-                    <RefreshCw size={16} className={loading ? 'spin' : ''} aria-hidden="true" />
-                    Refresh
+                    <RefreshCw size={16} className={loading || isLiveMode ? 'spin' : ''} aria-hidden="true" />
+                    {isLiveMode ? 'Live' : 'Refresh'}
+                    {isLiveMode && (
+                        <span style={{
+                            position: 'absolute',
+                            top: '-4px',
+                            right: '-4px',
+                            width: '8px',
+                            height: '8px',
+                            background: '#ef4444',
+                            borderRadius: '50%',
+                            animation: 'pulse 2s infinite'
+                        }} />
+                    )}
                 </button>
             </div>
 
@@ -336,6 +396,14 @@ const Monitoring = () => {
                 }
                 .spin {
                     animation: spin 1s linear infinite;
+                }
+                @keyframes pulse {
+                    0%, 100% {
+                        opacity: 1;
+                    }
+                    50% {
+                        opacity: 0.5;
+                    }
                 }
             `}</style>
         </div>

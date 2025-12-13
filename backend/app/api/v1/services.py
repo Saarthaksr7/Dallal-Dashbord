@@ -67,7 +67,7 @@ def read_service_history(
     from app.models.history import ServiceHistory
     statement = select(ServiceHistory).where(ServiceHistory.service_id == service_id).order_by(ServiceHistory.timestamp.desc()).limit(limit)
     history = session.exec(statement).all()
-    return history
+    return [item.model_dump() for item in history]
 
 @router.post("/", response_model=Service)
 async def create_service(
@@ -291,29 +291,37 @@ def update_service(
     session: Session = Depends(get_session),
     current_user = Depends(get_current_user)
 ):
-    service = session.get(Service, service_id)
-    if not service:
-        raise HTTPException(status_code=404, detail="Service not found")
+    try:
+        service = session.get(Service, service_id)
+        if not service:
+            raise HTTPException(status_code=404, detail="Service not found")
+            
+        service_data = service_in.model_dump(exclude_unset=True)
         
-    service_data = service_in.dict(exclude_unset=True)
-    
-    # Handle Password Encryption if changed
-    if 'ssh_password' in service_data and service_data['ssh_password']:
-         from app.core.security import encrypt_password
-         service_data['ssh_password'] = encrypt_password(service_data['ssh_password'])
+        # Handle Password Encryption if changed
+        if 'ssh_password' in service_data and service_data['ssh_password']:
+             from app.core.security import encrypt_password
+             service_data['ssh_password'] = encrypt_password(service_data['ssh_password'])
 
-    for key, value in service_data.items():
-        setattr(service, key, value)
+        for key, value in service_data.items():
+            setattr(service, key, value)
+            
+        session.add(service)
+        session.commit()
+        session.refresh(service)
         
-    session.add(service)
-    session.commit()
-    session.refresh(service)
-    
-    # Audit
-    from app.services.audit import log_audit
-    log_audit(username=current_user.username, action="UPDATE_SERVICE", details=f"Updated service {service.name}")
-    
-    return service
+        # Audit
+        from app.services.audit import log_audit
+        log_audit(username=current_user.username, action="UPDATE_SERVICE", details=f"Updated service {service.name}")
+        
+        return service
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        error_msg = f"Error updating service: {str(e)}\n{traceback.format_exc()}"
+        print(error_msg)  # This will show in terminal
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/{service_id}")
 def delete_service(

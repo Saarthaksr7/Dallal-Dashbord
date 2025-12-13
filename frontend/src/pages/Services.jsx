@@ -223,13 +223,21 @@ const Services = () => {
                 if (action === 'start') return { ...svc, is_active: true, status: 'running' };
                 if (action === 'stop') return { ...svc, is_active: false, status: 'stopped' };
                 if (action === 'restart') return { ...svc, is_active: false, status: 'restarting' };
+                if (action === 'toggle_maintenance') return { ...svc, maintenance: !svc.maintenance };
             }
             return svc;
         });
         setServices(updatedServices); // Update Store
 
         try {
-            await api.post(`/services/${id}/${action}`);
+            if (action === 'toggle_maintenance') {
+                // For maintenance toggle, use PUT to update the service
+                const service = services.find(s => s.id === id);
+                await api.put(`/services/${id}`, { maintenance: !service.maintenance });
+            } else {
+                // For other actions, use POST
+                await api.post(`/services/${id}/${action}`);
+            }
             fetchServices(true);
         } catch (err) {
             setServices(previousServices); // Revert Store

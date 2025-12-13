@@ -11,6 +11,7 @@ const OnboardingTour = ({ isOpen, onClose, userRole = 'user' }) => {
     const [currentStep, setCurrentStep] = useState(0);
     const [location, setLocation] = useLocation();
     const [highlightedElement, setHighlightedElement] = useState(null);
+    const [dontShowAgain, setDontShowAgain] = useState(false);
     const lastNavigatedRoute = useRef(null);
 
     // Define tour steps based on user role
@@ -109,16 +110,17 @@ const OnboardingTour = ({ isOpen, onClose, userRole = 'user' }) => {
     }, [currentStep]);
 
     const skipTour = useCallback(() => {
-        if (window.confirm('Are you sure you want to skip the tour? You can restart it anytime from Settings.')) {
-            completeTour();
-        }
+        completeTour();
     }, []);
 
     const completeTour = useCallback(() => {
         localStorage.setItem('dallal_onboarding_completed', 'true');
         localStorage.setItem('dallal_onboarding_completed_at', new Date().toISOString());
+        if (dontShowAgain) {
+            localStorage.setItem('dallal_onboarding_disabled', 'true');
+        }
         onClose();
-    }, [onClose]);
+    }, [onClose, dontShowAgain]);
 
     // Navigate to step route if needed (fixed infinite loop by removing setLocation from deps)
     useEffect(() => {
@@ -374,9 +376,48 @@ const OnboardingTour = ({ isOpen, onClose, userRole = 'user' }) => {
                     </button>
                 </div>
 
+                {/* Don't show again checkbox */}
+                <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--glass-border)' }}>
+                    <label
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.75rem',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            color: 'var(--text-secondary)',
+                            userSelect: 'none'
+                        }}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setDontShowAgain(!dontShowAgain);
+                        }}
+                    >
+                        <div style={{
+                            width: '20px',
+                            height: '20px',
+                            borderRadius: '4px',
+                            border: `2px solid ${dontShowAgain ? 'var(--accent)' : 'var(--glass-border)'}`,
+                            background: dontShowAgain ? 'var(--accent)' : 'transparent',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s ease',
+                            flexShrink: 0
+                        }}>
+                            {dontShowAgain && (
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ color: 'white' }}>
+                                    <path d="M2 7L5.5 10.5L12 3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            )}
+                        </div>
+                        Don't show this tour on startup
+                    </label>
+                </div>
+
                 {/* Skip link */}
                 {currentStep < totalSteps - 1 && (
-                    <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                    <div style={{ textAlign: 'center', marginTop: '0.75rem' }}>
                         <button
                             onClick={skipTour}
                             style={{
@@ -399,7 +440,9 @@ const OnboardingTour = ({ isOpen, onClose, userRole = 'user' }) => {
 
 // Helper function to check if tour should be shown
 export const shouldShowOnboarding = () => {
-    return !localStorage.getItem('dallal_onboarding_completed');
+    const isDisabled = localStorage.getItem('dallal_onboarding_disabled');
+    const isCompleted = localStorage.getItem('dallal_onboarding_completed');
+    return !isDisabled && !isCompleted;
 };
 
 // Helper function to reset tour

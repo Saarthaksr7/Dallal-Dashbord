@@ -1,10 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import * as XTermNamespace from 'xterm';
-import { FitAddon } from 'xterm-addon-fit';
-import 'xterm/css/xterm.css';
 import { api, BASE_URL } from '../lib/api';
 import Card from '../components/ui/Card';
-import { Terminal as TerminalIcon, Search, Lock, Play } from 'lucide-react';
+import { Terminal as TerminalIcon, Play } from 'lucide-react';
 
 const SSH = () => {
     const terminalRef = useRef(null);
@@ -13,85 +10,125 @@ const SSH = () => {
     const [selectedService, setSelectedService] = useState(null);
     const [credentials, setCredentials] = useState({ username: '', password: '' });
     const [connected, setConnected] = useState(false);
-    const [termInstance, setTermInstance] = useState(null);
+    const [showConnectionModal, setShowConnectionModal] = useState(false);
+    const [connectionLogs, setConnectionLogs] = useState([]);
+    const [connectionStatus, setConnectionStatus] = useState('connecting');
 
     useEffect(() => {
-        // Fetch services with SSH capability or just all TCP services
         api.get('/services/')
             .then(res => setServices(res.data))
             .catch(err => console.error(err));
 
         return () => {
-            // Cleanup
             if (wsRef.current) wsRef.current.close();
-            if (termInstance) termInstance.dispose();
         };
     }, []);
 
-    const connectSSH = () => {
+    const addLog = (message, type = 'info') => {
+        setConnectionLogs(prev => [...prev, { message, type, timestamp: new Date() }]);
+    };
+
+    const connectSSH = async () => {
         if (!selectedService || !credentials.username || !credentials.password) return;
 
-        // Initialize xterm
-        const term = new XTermNamespace.Terminal({
-            cursorBlink: true,
-            theme: {
-                background: '#0d1117',
-                foreground: '#c9d1d9'
-            },
-            fontFamily: 'monospace'
-        });
-        const fitAddon = new FitAddon();
-        term.loadAddon(fitAddon);
+        // Show modal
+        setShowConnectionModal(true);
+        setConnectionLogs([]);
+        setConnectionStatus('connecting');
+        addLog('Initializing SSH connection...');
 
-        // Clear previous content
-        if (terminalRef.current) {
-            terminalRef.current.innerHTML = '';
-        }
-        term.open(terminalRef.current);
-        fitAddon.fit();
-        setTermInstance(term);
+        try {
+            // Dynamically load xterm
+            addLog('Loading terminal library...');
+            const xtermModule = await import('xterm');
+            const fitModule = await import('xterm-addon-fit');
 
-        term.writeln('Connecting to ' + selectedService.name + '...');
+            // Import CSS
+            await import('xterm/css/xterm.css');
 
-        // WebSocket
-        // Replace http/https with ws/wss
-        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        // Allow BASE_URL to dictate host, but we need to strip http://
-        const host = BASE_URL.replace(/^https?:\/\//, '');
-        const wsUrl = `${wsProtocol}//${host}/ws/ssh/${selectedService.id}`;
+            const Terminal = xtermModule.Terminal;
+            const FitAddon = fitModule.FitAddon;
 
-        const socket = new WebSocket(wsUrl);
-        wsRef.current = socket;
+            addLog('Terminal library loaded', 'success');
 
-        socket.onopen = () => {
-            term.writeln('Connection established. Authenticating...');
-            // Send Credentials
-            socket.send(JSON.stringify(credentials));
-            setConnected(true);
-        };
+            const term = new Terminal({
+                cursorBlink: true,
+                theme: {
+                    background: '#0d1117',
+                    foreground: '#c9d1d9'
+                },
+                fontFamily: 'monospace'
+            });
 
-        socket.onmessage = (event) => {
-            term.write(event.data);
-        };
+            const fitAddon = new FitAddon();
+            term.loadAddon(fitAddon);
 
-        socket.onclose = (e) => {
-            term.writeln('\r\nConnection closed: ' + e.code);
-            setConnected(false);
-        };
-
-        socket.onerror = (err) => {
-            term.writeln('\r\nWebSocket Error.');
-            console.error(err);
-        };
-
-        // User Input -> WS
-        term.onData(data => {
-            if (socket.readyState === WebSocket.OPEN) {
-                socket.send(data);
+            if (terminalRef.current) {
+                terminalRef.current.innerHTML = '';
             }
-        });
+            term.open(terminalRef.current);
+            fitAddon.fit();
 
-        // Handle Resize ?? (Need backend support for window size, skip for now MVP)
+            addLog(`Connecting to ${selectedService.name} (${selectedService.ip})...`);
+            term.writeln('Connecting to ' + selectedService.name + '...');
+
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = BASE_URL.replace(/^https?:\/\//, '');
+            const wsUrl = `${wsProtocol}//${host}/ws/ssh/${selectedService.id}`;
+
+            addLog('Establishing WebSocket connection...');
+            const socket = new WebSocket(wsUrl);
+            wsRef.current = socket;
+
+            socket.onopen = () => {
+                addLog('WebSocket connected', 'success');
+                term.writeln('Connection established. Authenticating...');
+                addLog('Sending credentials...');
+                socket.send(JSON.stringify(credentials));
+                setConnected(true);
+
+                setTimeout(() => {
+                    setConnectionStatus('success');
+                    addLog('SSH session established!', 'success');
+                    setTimeout(() => setShowConnectionModal(false), 1500);
+                }, 500);
+            };
+
+            socket.onmessage = (event) => {
+                term.write(event.data);
+            };
+
+            socket.onclose = (e) => {
+                term.writeln('\r\nConnection closed: ' + e.code);
+                setConnected(false);
+
+                if (connectionStatus === 'connecting') {
+                    setConnectionStatus('failed');
+                    addLog(`Connection closed: ${e.code}`, 'error');
+                    setTimeout(() => setShowConnectionModal(false), 3000);
+                }
+            };
+
+            socket.onerror = (err) => {
+                term.writeln('\r\nWebSocket Error.');
+                console.error(err);
+                setConnectionStatus('failed');
+                addLog('Connection failed', 'error');
+                setTimeout(() => setShowConnectionModal(false), 3000);
+            };
+
+            term.onData(data => {
+                if (socket.readyState === WebSocket.OPEN) {
+                    socket.send(data);
+                }
+            });
+
+        } catch (error) {
+            console.error('Failed to load terminal:', error);
+            setConnectionStatus('failed');
+            addLog(`Failed to load terminal: ${error.message}`, 'error');
+            setTimeout(() => setShowConnectionModal(false), 3000);
+        }
     };
 
     const handleKey = (e) => {
@@ -113,7 +150,12 @@ const SSH = () => {
                                 onChange={e => {
                                     const s = services.find(x => x.id === parseInt(e.target.value));
                                     setSelectedService(s);
-                                    // Pre-fill username if we had it stored? For now blank.
+                                    if (s && s.ssh_username) {
+                                        setCredentials({
+                                            username: s.ssh_username || '',
+                                            password: s.ssh_password || ''
+                                        });
+                                    }
                                 }}
                             >
                                 <option value="">Select a service...</option>
@@ -169,6 +211,108 @@ const SSH = () => {
                     </button>
                 </div>
             )}
+
+            {/* Connection Modal */}
+            {showConnectionModal && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0,0,0,0.7)',
+                    backdropFilter: 'blur(4px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 9999
+                }}>
+                    <Card style={{
+                        width: '90%',
+                        maxWidth: '500px',
+                        background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95))',
+                        border: '1px solid rgba(59, 130, 246, 0.3)',
+                        boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
+                    }}>
+                        <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            {connectionStatus === 'connecting' && (
+                                <>
+                                    <div style={{
+                                        width: '24px',
+                                        height: '24px',
+                                        border: '3px solid rgba(59, 130, 246, 0.3)',
+                                        borderTop: '3px solid var(--accent)',
+                                        borderRadius: '50%',
+                                        animation: 'spin 1s linear infinite'
+                                    }} />
+                                    <h3 style={{ margin: 0, color: 'var(--accent)' }}>Connecting to SSH...</h3>
+                                </>
+                            )}
+                            {connectionStatus === 'success' && (
+                                <>
+                                    <div style={{
+                                        width: '24px',
+                                        height: '24px',
+                                        background: 'var(--success)',
+                                        borderRadius: '50%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: 'white',
+                                        fontWeight: 'bold'
+                                    }}>✓</div>
+                                    <h3 style={{ margin: 0, color: 'var(--success)' }}>Connected Successfully!</h3>
+                                </>
+                            )}
+                            {connectionStatus === 'failed' && (
+                                <>
+                                    <div style={{
+                                        width: '24px',
+                                        height: '24px',
+                                        background: 'var(--danger)',
+                                        borderRadius: '50%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: 'white',
+                                        fontWeight: 'bold'
+                                    }}>✕</div>
+                                    <h3 style={{ margin: 0, color: 'var(--danger)' }}>Connection Failed</h3>
+                                </>
+                            )}
+                        </div>
+
+                        <div style={{
+                            background: 'rgba(0,0,0,0.3)',
+                            borderRadius: '6px',
+                            padding: '1rem',
+                            maxHeight: '300px',
+                            overflowY: 'auto',
+                            fontFamily: 'monospace',
+                            fontSize: '0.85rem'
+                        }}>
+                            {connectionLogs.map((log, index) => (
+                                <div key={index} style={{
+                                    marginBottom: '0.5rem',
+                                    display: 'flex',
+                                    gap: '0.5rem',
+                                    color: log.type === 'error' ? 'var(--danger)' : log.type === 'success' ? 'var(--success)' : 'var(--text-secondary)'
+                                }}>
+                                    <span style={{ opacity: 0.5 }}>[{log.timestamp.toLocaleTimeString()}]</span>
+                                    <span>{log.message}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
+                </div>
+            )}
+
+            <style>{`
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            `}</style>
         </div>
     );
 };

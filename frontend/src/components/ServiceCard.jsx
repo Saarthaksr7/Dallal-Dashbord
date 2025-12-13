@@ -253,7 +253,7 @@ const ServiceCard = ({ service, onAction, onEdit, onDelete, onWake, statusMap, i
                     className={`icon-btn ${service.maintenance ? 'active' : ''}`}
                     onClick={(e) => {
                         e.stopPropagation();
-                        onEdit({ ...service, maintenance: !service.maintenance });
+                        handleAction('toggle_maintenance');
                     }}
                     title="Toggle Maintenance Mode"
                     aria-label="Toggle Maintenance"
@@ -261,41 +261,76 @@ const ServiceCard = ({ service, onAction, onEdit, onDelete, onWake, statusMap, i
                     <Wrench size={16} />
                 </button>
 
-                <button
-                    className={`icon-btn ${service.status === 'running' ? 'disabled' : ''}`}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        handleAction('start');
-                    }}
-                    disabled={service.status === 'running'}
-                    title="Start Service"
-                    aria-label={`Start service ${service.name}`}
-                >
-                    <Play size={16} />
-                </button>
-                <button
-                    className={`icon-btn ${service.status === 'stopped' ? 'disabled' : ''}`}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        handleAction('stop');
-                    }}
-                    disabled={service.status === 'stopped'}
-                    title="Stop Service"
-                    aria-label={`Stop service ${service.name}`}
-                >
-                    <Square size={16} />
-                </button>
-                <button
-                    className="icon-btn"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        handleAction('restart');
-                    }}
-                    title="Restart Service"
-                    aria-label={`Restart service ${service.name}`}
-                >
-                    <RotateCw size={16} />
-                </button>
+                {/* Show SSH setup button if no credentials, otherwise show control buttons */}
+                {!service.ssh_username || !service.ssh_password ? (
+                    <button
+                        className="icon-btn setup-ssh"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (window.confirm('📋 SETUP SSH FOR ADVANCED CONTROLS\n\n' +
+                                '1. Click OK to open service settings\n' +
+                                '2. Enter SSH Username (e.g., root, admin)\n' +
+                                '3. Enter SSH Password\n' +
+                                '4. Add Tags: "ssh" or "linux" for SSH access\n' +
+                                '   OR "rdp" or "windows" for RDP access\n\n' +
+                                'This enables:\n' +
+                                '✓ Remote Start/Stop/Restart commands\n' +
+                                '✓ Quick SSH/RDP connect buttons\n\n' +
+                                'Continue to setup?')) {
+                                onEdit(service);
+                            }
+                        }}
+                        title="Setup SSH for Advanced Controls"
+                        aria-label="Setup SSH credentials"
+                        style={{
+                            flex: 1,
+                            background: 'rgba(59, 130, 246, 0.1)',
+                            borderColor: 'rgba(59, 130, 246, 0.3)',
+                            color: 'var(--accent)'
+                        }}
+                    >
+                        <Settings size={16} />
+                        <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem' }}>Setup SSH for Controls</span>
+                    </button>
+                ) : (
+                    <>
+                        <button
+                            className={`icon-btn ${service.status === 'running' ? 'disabled' : ''}`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleAction('start');
+                            }}
+                            disabled={service.status === 'running'}
+                            title="Start Service"
+                            aria-label={`Start service ${service.name}`}
+                        >
+                            <Play size={16} />
+                        </button>
+                        <button
+                            className={`icon-btn ${service.status === 'stopped' ? 'disabled' : ''}`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleAction('stop');
+                            }}
+                            disabled={service.status === 'stopped'}
+                            title="Stop Service"
+                            aria-label={`Stop service ${service.name}`}
+                        >
+                            <Square size={16} />
+                        </button>
+                        <button
+                            className="icon-btn"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleAction('restart');
+                            }}
+                            title="Restart Service"
+                            aria-label={`Restart service ${service.name}`}
+                        >
+                            <RotateCw size={16} />
+                        </button>
+                    </>
+                )}
                 {/* Wake-on-LAN Button */}
                 <button
                     className="icon-btn"
