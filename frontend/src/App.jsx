@@ -81,6 +81,7 @@ function App() {
       '/monitoring': 'Monitoring',
       '/alerts': 'Alerts',
       '/settings': 'Settings',
+      '/ssh/custom': 'Custom SSH',
       '/ssh': 'SSH Terminal',
       '/rdp': 'Remote Desktop',
       '/ops-center': 'Ops Center',

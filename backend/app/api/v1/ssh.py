@@ -60,6 +60,98 @@ def execute_command(service_id: int, request: CommandRequest, session: Session =
         logger.error(f"SSH Exec Failed: {e}")
         return {"error": str(e)}
 
+@router.websocket("/ws/ssh/custom")
+async def custom_ssh_websocket(websocket: WebSocket):
+    """
+    WebSocket endpoint for custom SSH connections.
+    Accepts direct connection parameters instead of service ID.
+    """
+    logger.info("Custom SSH WebSocket connection attempt received")
+    await websocket.accept()
+    
+    try:
+        # Initial Handshake for Connection Details
+        # Client should send JSON: { "host": "...", "port": 22, "username": "...", "password": "..." }
+        data = await websocket.receive_json()
+        host = data.get("host")
+        port = data.get("port", 22)
+        username = data.get("username")
+        password = data.get("password")
+        
+        # Validate required fields
+        if not host or not username or not password:
+            await websocket.close(code=4003, reason="Host, username, and password required")
+            return
+        
+        # Validate port
+        try:
+            port = int(port)
+            if port < 1 or port > 65535:
+                raise ValueError("Port out of range")
+        except (ValueError, TypeError):
+            await websocket.close(code=4003, reason="Invalid port number")
+            return
+
+        # Connect SSH
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        
+        try:
+            logger.info(f"Attempting custom SSH connection to {username}@{host}:{port}")
+            client.connect(
+                hostname=host,
+                port=port,
+                username=username,
+                password=password,
+                timeout=10
+            )
+            logger.info(f"Custom SSH connection established to {host}")
+        except Exception as e:
+            logger.error(f"Custom SSH Connect Failed: {e}")
+            await websocket.send_text(f"Error: {str(e)}\r\n")
+            await websocket.close(code=4000)
+            return
+
+        # Open Shell
+        channel = client.invoke_shell()
+        channel.settimeout(0.0)  # Non-blocking
+
+        # Bidirectional forwarding
+        async def forward_ssh_to_ws():
+            """Forward data from SSH channel to WebSocket"""
+            try:
+                while True:
+                    if channel.recv_ready():
+                        data = channel.recv(4096).decode('utf-8', errors='ignore')
+                        await websocket.send_text(data)
+                    else:
+                        await asyncio.sleep(0.05)
+                        if channel.exit_status_ready():
+                            break
+            except Exception as e:
+                logger.error(f"Custom SSH->WS Error: {e}")
+                
+        # Start SSH reader task
+        task = asyncio.create_task(forward_ssh_to_ws())
+        
+        try:
+            while True:
+                command = await websocket.receive_text()
+                # Forward keystrokes from xterm to SSH channel
+                channel.send(command)
+        except WebSocketDisconnect:
+            logger.info(f"Custom SSH WebSocket disconnected for {host}")
+        except Exception as e:
+            logger.error(f"Custom WS->SSH Error: {e}")
+        finally:
+            task.cancel()
+            client.close()
+            logger.info(f"Custom SSH connection closed to {host}")
+            
+    except Exception as e:
+        logger.error(f"Custom SSH WebSocket Error: {e}")
+        await websocket.close()
+
 @router.websocket("/ws/ssh/{service_id}")
 async def ssh_websocket(websocket: WebSocket, service_id: int, session: Session = Depends(get_session)):
     await websocket.accept()
@@ -85,7 +177,11 @@ async def ssh_websocket(websocket: WebSocket, service_id: int, session: Session 
              if not username and service.ssh_username:
                  username = service.ssh_username
         
+        logger.info(f"SSH Console connecting to {service.name} ({service.ip}:{service.port or 22}) as {username}")
+        logger.info(f"Password provided: {'Yes' if password else 'No'}, Length: {len(password) if password else 0}")
+        
         if not username or not password:
+            logger.error(f"SSH Console: Missing credentials for {service.name}")
             await websocket.close(code=4003, reason="Credentials required")
             return
 
@@ -176,3 +272,104 @@ async def ssh_websocket(websocket: WebSocket, service_id: int, session: Session 
     except Exception as e:
         logger.error(f"WebSocket Error: {e}")
         await websocket.close()
+
+@router.websocket("/ws/test")
+async def test_websocket(websocket: WebSocket):
+    """Simple test WebSocket to verify routing works"""
+    logger.info("TEST WebSocket hit!")
+    await websocket.accept()
+    await websocket.send_text("Hello from test WebSocket!")
+    await websocket.close()
+
+@router.websocket("/ws/ssh/custom")
+async def custom_ssh_websocket(websocket: WebSocket):
+    """
+    WebSocket endpoint for custom SSH connections.
+    Accepts direct connection parameters instead of service ID.
+    """
+    logger.info("Custom SSH WebSocket connection attempt received")
+    await websocket.accept()
+    
+    try:
+        # Initial Handshake for Connection Details
+        # Client should send JSON: { "host": "...", "port": 22, "username": "...", "password": "..." }
+        data = await websocket.receive_json()
+        host = data.get("host")
+        port = data.get("port", 22)
+        username = data.get("username")
+        password = data.get("password")
+        
+        # Validate required fields
+        if not host or not username or not password:
+            await websocket.close(code=4003, reason="Host, username, and password required")
+            return
+        
+        # Validate port
+        try:
+            port = int(port)
+            if port < 1 or port > 65535:
+                raise ValueError("Port out of range")
+        except (ValueError, TypeError):
+            await websocket.close(code=4003, reason="Invalid port number")
+            return
+
+        # Connect SSH
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        
+        try:
+            logger.info(f"Attempting custom SSH connection to {username}@{host}:{port}")
+            client.connect(
+                hostname=host,
+                port=port,
+                username=username,
+                password=password,
+                timeout=10
+            )
+            logger.info(f"Custom SSH connection established to {host}")
+        except Exception as e:
+            logger.error(f"Custom SSH Connect Failed: {e}")
+            await websocket.send_text(f"Error: {str(e)}\r\n")
+            await websocket.close(code=4000)
+            return
+
+        # Open Shell
+        channel = client.invoke_shell()
+        channel.settimeout(0.0)  # Non-blocking
+
+        # Bidirectional forwarding
+        async def forward_ssh_to_ws():
+            """Forward data from SSH channel to WebSocket"""
+            try:
+                while True:
+                    if channel.recv_ready():
+                        data = channel.recv(4096).decode('utf-8', errors='ignore')
+                        await websocket.send_text(data)
+                    else:
+                        await asyncio.sleep(0.05)
+                        if channel.exit_status_ready():
+                            break
+            except Exception as e:
+                logger.error(f"Custom SSH->WS Error: {e}")
+                
+        # Start SSH reader task
+        task = asyncio.create_task(forward_ssh_to_ws())
+        
+        try:
+            while True:
+                command = await websocket.receive_text()
+                # Forward keystrokes from xterm to SSH channel
+                channel.send(command)
+        except WebSocketDisconnect:
+            logger.info(f"Custom SSH WebSocket disconnected for {host}")
+        except Exception as e:
+            logger.error(f"Custom WS->SSH Error: {e}")
+        finally:
+            task.cancel()
+            client.close()
+            logger.info(f"Custom SSH connection closed to {host}")
+            
+    except Exception as e:
+        logger.error(f"Custom SSH WebSocket Error: {e}")
+        await websocket.close()
+

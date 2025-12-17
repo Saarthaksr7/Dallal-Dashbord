@@ -55,6 +55,21 @@ def read_services(
     current_user = Depends(get_current_user)
 ):
     services = session.exec(select(Service).offset(skip).limit(limit)).all()
+    
+    # Decrypt SSH passwords for frontend
+    from app.core.security import decrypt_password
+    import logging
+    logger = logging.getLogger(__name__)
+    for service in services:
+        if service.ssh_password:
+            try:
+                decrypted = decrypt_password(service.ssh_password)
+                logger.info(f"Decrypted password for {service.name}: length={len(decrypted)}")
+                service.ssh_password = decrypted
+            except Exception as e:
+                logger.error(f"Failed to decrypt password for {service.name}: {e}")
+                pass  # Keep encrypted if decryption fails
+    
     return services
 
 @router.get("/{service_id}/history", response_model=List[dict]) 

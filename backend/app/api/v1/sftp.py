@@ -111,8 +111,104 @@ def download_file(service_id: int, path: str, username: str = None, password: st
                 file_obj.close()
                 sftp.close()
                 ssh.close()
-                
-        return StreamingResponse(iterfile(), media_type="application/octet-stream", headers={"Content-Disposition": f"attachment; filename={filename}"})
+        
+        # Properly encode filename for Content-Disposition header
+        from urllib.parse import quote
+        encoded_filename = quote(filename)
+        
+        return StreamingResponse(
+            iterfile(), 
+            media_type="application/octet-stream", 
+            headers={
+                "Content-Disposition": f"attachment; filename=\"{filename}\"; filename*=UTF-8''{encoded_filename}",
+                "Access-Control-Expose-Headers": "Content-Disposition",
+                "X-Filename": filename  # Fallback header
+            }
+        )
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+class DeleteRequest(BaseModel):
+    path: str
+    username: Optional[str] = None
+    password: Optional[str] = None
+
+
+@router.post("/{service_id}/upload")
+async def upload_file(
+    service_id: int,
+    file: UploadFile = File(...),
+    path: str = Form("/"),
+    username: str = Form(None),
+    password: str = Form(None),
+    session: Session = Depends(get_session)
+):
+    service = session.get(Service, service_id)
+    if not service:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    ssh, sftp = None, None
+    try:
+        ssh, sftp = get_sftp_client(service, username, password)
+        
+        # Build remote path
+        remote_path = f"{path.rstrip('/')}/{file.filename}"
+        
+        # Read file content and upload
+        content = await file.read()
+        with sftp.open(remote_path, 'wb') as remote_file:
+            remote_file.write(content)
+        
+        return {"success": True, "path": remote_path, "message": f"Uploaded {file.filename}"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if sftp: sftp.close()
+        if ssh: ssh.close()
+
+
+@router.post("/{service_id}/delete")
+def delete_file(service_id: int, req: DeleteRequest, session: Session = Depends(get_session)):
+    service = session.get(Service, service_id)
+    if not service:
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    ssh, sftp = None, None
+    try:
+        ssh, sftp = get_sftp_client(service, req.username, req.password)
+        
+        # Check if it's a directory or file
+        try:
+            file_stat = sftp.stat(req.path)
+            is_dir = stat.S_ISDIR(file_stat.st_mode)
+        except IOError:
+            raise HTTPException(status_code=404, detail="Path not found")
+        
+        if is_dir:
+            # For directories, we need to recursively delete contents first
+            def rmdir_recursive(path):
+                for item in sftp.listdir_attr(path):
+                    item_path = f"{path.rstrip('/')}/{item.filename}"
+                    if stat.S_ISDIR(item.st_mode):
+                        rmdir_recursive(item_path)
+                    else:
+                        sftp.remove(item_path)
+                sftp.rmdir(path)
+            
+            rmdir_recursive(req.path)
+        else:
+            sftp.remove(req.path)
+        
+        return {"success": True, "message": f"Deleted {req.path}"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if sftp: sftp.close()
+        if ssh: ssh.close()
+

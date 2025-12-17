@@ -1,105 +1,75 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import Card from '../components/ui/Card';
-import { History, Search, Filter, Clock, User, Server, CheckCircle, XCircle } from 'lucide-react';
+import { History, Search, Filter, Clock, User, Server, CheckCircle, XCircle, Copy, Trash2, Download } from 'lucide-react';
 
 const SSHHistory = () => {
     const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState('');
     const [filterService, setFilterService] = useState('all');
     const [filterStatus, setFilterStatus] = useState('all');
+    const [history, setHistory] = useState([]);
+    const [clearModal, setClearModal] = useState(false);
+    const [clearing, setClearing] = useState(false);
 
-    // Mock command history data
-    const mockHistory = [
-        {
-            id: 1,
-            timestamp: new Date(Date.now() - 10 * 60000).toISOString(),
-            service: 'Web Server',
-            serviceIp: '192.168.1.10',
-            user: 'admin',
-            command: 'systemctl restart nginx',
-            status: 'success',
-            duration: 2.3,
-            output: 'Service restarted successfully'
-        },
-        {
-            id: 2,
-            timestamp: new Date(Date.now() - 30 * 60000).toISOString(),
-            service: 'Database Server',
-            serviceIp: '192.168.1.20',
-            user: 'root',
-            command: 'docker-compose up -d',
-            status: 'success',
-            duration: 5.7,
-            output: 'Containers started'
-        },
-        {
-            id: 3,
-            timestamp: new Date(Date.now() - 45 * 60000).toISOString(),
-            service: 'Web Server',
-            serviceIp: '192.168.1.10',
-            user: 'admin',
-            command: 'tail -f /var/log/nginx/error.log',
-            status: 'success',
-            duration: 0.1,
-            output: 'Log viewing session'
-        },
-        {
-            id: 4,
-            timestamp: new Date(Date.now() - 60 * 60000).toISOString(),
-            service: 'Application Server',
-            serviceIp: '192.168.1.30',
-            user: 'deploy',
-            command: 'npm install',
-            status: 'failed',
-            duration: 12.4,
-            output: 'Permission denied'
-        },
-        {
-            id: 5,
-            timestamp: new Date(Date.now() - 90 * 60000).toISOString(),
-            service: 'Database Server',
-            serviceIp: '192.168.1.20',
-            user: 'root',
-            command: 'pg_dump mydb > backup.sql',
-            status: 'success',
-            duration: 45.2,
-            output: 'Database backup completed'
-        },
-        {
-            id: 6,
-            timestamp: new Date(Date.now() - 120 * 60000).toISOString(),
-            service: 'Web Server',
-            serviceIp: '192.168.1.10',
-            user: 'admin',
-            command: 'df -h',
-            status: 'success',
-            duration: 0.2,
-            output: 'Disk usage check'
-        },
-        {
-            id: 7,
-            timestamp: new Date(Date.now() - 180 * 60000).toISOString(),
-            service: 'Application Server',
-            serviceIp: '192.168.1.30',
-            user: 'deploy',
-            command: 'git pull origin main',
-            status: 'success',
-            duration: 3.1,
-            output: 'Updated to latest version'
-        },
-        {
-            id: 8,
-            timestamp: new Date(Date.now() - 240 * 60000).toISOString(),
-            service: 'Database Server',
-            serviceIp: '192.168.1.20',
-            user: 'postgres',
-            command: 'psql -c "SELECT * FROM users LIMIT 10;"',
-            status: 'success',
-            duration: 1.2,
-            output: 'Query executed'
+    // Load history from localStorage
+    useEffect(() => {
+        loadHistory();
+
+        // Refresh history when page becomes visible (e.g., navigating back from SSH Console)
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                loadHistory();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('focus', loadHistory);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('focus', loadHistory);
+        };
+    }, []);
+
+    const loadHistory = () => {
+        const saved = localStorage.getItem('commandHistory');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                setHistory(parsed);
+            } catch (e) {
+                console.error('Failed to parse history:', e);
+                setHistory([]);
+            }
+        } else {
+            setHistory([]);
         }
-    ];
+    };
+
+    const clearHistory = () => {
+        setClearing(true);
+        localStorage.setItem('commandHistory', JSON.stringify([]));
+        setHistory([]);
+        setClearing(false);
+        setClearModal(false);
+    };
+
+    const copyCommand = (command) => {
+        navigator.clipboard.writeText(command);
+        alert('Command copied to clipboard!');
+    };
+
+    const exportHistory = () => {
+        const dataStr = JSON.stringify(history, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+        const exportFileDefaultName = `ssh_history_${new Date().toISOString().split('T')[0]}.json`;
+
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+    };
 
     const formatTimeAgo = (timestamp) => {
         const minutes = Math.floor((Date.now() - new Date(timestamp).getTime()) / 60000);
@@ -110,14 +80,15 @@ const SSHHistory = () => {
         return `${days}d ago`;
     };
 
-    const uniqueServices = [...new Set(mockHistory.map(h => h.service))];
+    const uniqueServices = [...new Set(history.map(h => h.service).filter(s => s && s.trim()))];
 
-    const filteredHistory = mockHistory.filter(item => {
-        const matchesSearch = item.command.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.service.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.user.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesService = filterService === 'all' || item.service === filterService;
-        const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
+    const filteredHistory = history.filter(item => {
+        const command = item.command || '';
+        const service = item.service || '';
+        const matchesSearch = command.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            service.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesService = filterService === 'all' || service === filterService;
+        const matchesStatus = filterStatus === 'all' || item.result === filterStatus;
         return matchesSearch && matchesService && matchesStatus;
     });
 
@@ -138,48 +109,95 @@ const SSHHistory = () => {
                 display: 'flex',
                 gap: '1rem',
                 marginBottom: '1.5rem',
-                flexWrap: 'wrap'
+                flexWrap: 'wrap',
+                justifyContent: 'space-between'
             }}>
-                <div style={{ position: 'relative', flex: '1', minWidth: '250px' }}>
-                    <Search size={18} style={{
-                        position: 'absolute',
-                        left: '12px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        color: 'var(--text-secondary)'
-                    }} />
-                    <input
-                        type="text"
-                        placeholder="Search commands, services, users..."
+                <div style={{ display: 'flex', gap: '1rem', flex: 1, flexWrap: 'wrap' }}>
+                    <div style={{ position: 'relative', flex: '1', minWidth: '250px' }}>
+                        <Search size={18} style={{
+                            position: 'absolute',
+                            left: '12px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            color: 'var(--text-secondary)'
+                        }} />
+                        <input
+                            type="text"
+                            placeholder="Search commands, services..."
+                            className="input-field"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            style={{ paddingLeft: '2.5rem' }}
+                        />
+                    </div>
+
+                    <select
                         className="input-field"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        style={{ paddingLeft: '2.5rem' }}
-                    />
+                        value={filterService}
+                        onChange={(e) => setFilterService(e.target.value)}
+                        style={{ minWidth: '200px' }}
+                    >
+                        <option value="all">All Services</option>
+                        {uniqueServices.map(service => (
+                            <option key={service} value={service}>{service}</option>
+                        ))}
+                    </select>
+
+                    <select
+                        className="input-field"
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value)}
+                        style={{ minWidth: '150px' }}
+                    >
+                        <option value="all">All Status</option>
+                        <option value="success">Success</option>
+                        <option value="failed">Failed</option>
+                    </select>
                 </div>
 
-                <select
-                    className="input-field"
-                    value={filterService}
-                    onChange={(e) => setFilterService(e.target.value)}
-                    style={{ minWidth: '200px' }}
-                >
-                    <option value="all">All Services</option>
-                    {uniqueServices.map(service => (
-                        <option key={service} value={service}>{service}</option>
-                    ))}
-                </select>
-
-                <select
-                    className="input-field"
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    style={{ minWidth: '150px' }}
-                >
-                    <option value="all">All Status</option>
-                    <option value="success">Success</option>
-                    <option value="failed">Failed</option>
-                </select>
+                {/* Action Buttons */}
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                        onClick={exportHistory}
+                        disabled={history.length === 0}
+                        style={{
+                            padding: '0.5rem 1rem',
+                            background: '#238636',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: history.length === 0 ? 'not-allowed' : 'pointer',
+                            opacity: history.length === 0 ? 0.5 : 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            fontSize: '14px'
+                        }}
+                    >
+                        <Download size={16} />
+                        Export
+                    </button>
+                    <button
+                        onClick={() => setClearModal(true)}
+                        disabled={history.length === 0}
+                        style={{
+                            padding: '0.5rem 1rem',
+                            background: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: history.length === 0 ? 'not-allowed' : 'pointer',
+                            opacity: history.length === 0 ? 0.5 : 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            fontSize: '14px'
+                        }}
+                    >
+                        <Trash2 size={16} />
+                        Clear
+                    </button>
+                </div>
             </div>
 
             {/* Summary Cards */}
@@ -195,7 +213,7 @@ const SSHHistory = () => {
                         <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Total Commands</span>
                     </div>
                     <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
-                        {mockHistory.length}
+                        {history.length}
                     </div>
                 </Card>
 
@@ -205,7 +223,7 @@ const SSHHistory = () => {
                         <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Successful</span>
                     </div>
                     <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>
-                        {mockHistory.filter(h => h.status === 'success').length}
+                        {history.filter(h => h.result === 'success').length}
                     </div>
                 </Card>
 
@@ -215,7 +233,7 @@ const SSHHistory = () => {
                         <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Failed</span>
                     </div>
                     <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ef4444' }}>
-                        {mockHistory.filter(h => h.status === 'failed').length}
+                        {history.filter(h => h.result === 'failed').length}
                     </div>
                 </Card>
 
@@ -316,15 +334,15 @@ const SSHHistory = () => {
                                                 fontSize: '0.75rem',
                                                 fontWeight: 'bold',
                                                 textTransform: 'uppercase',
-                                                background: item.status === 'success' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                                                color: item.status === 'success' ? '#10b981' : '#ef4444',
-                                                border: `1px solid ${item.status === 'success' ? '#10b981' : '#ef4444'}`
+                                                background: item.result === 'success' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                                                color: item.result === 'success' ? '#10b981' : '#ef4444',
+                                                border: `1px solid ${item.result === 'success' ? '#10b981' : '#ef4444'}`
                                             }}>
-                                                {item.status}
+                                                {item.result || 'unknown'}
                                             </span>
                                         </td>
                                         <td style={{ padding: '1rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                                            {item.duration}s
+                                            {item.duration ? `${item.duration}s` : '-'}
                                         </td>
                                     </tr>
                                 ))
@@ -333,6 +351,115 @@ const SSHHistory = () => {
                     </table>
                 </div>
             </Card>
+
+            {/* Clear Confirmation Modal */}
+            {clearModal && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.7)',
+                    backdropFilter: 'blur(4px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 9999
+                }}>
+                    <div style={{
+                        background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98))',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        borderRadius: '12px',
+                        padding: '1.5rem',
+                        maxWidth: '400px',
+                        width: '90%',
+                        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                            <div style={{
+                                width: '40px',
+                                height: '40px',
+                                borderRadius: '50%',
+                                background: 'rgba(239, 68, 68, 0.2)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}>
+                                <Trash2 size={20} style={{ color: '#ef4444' }} />
+                            </div>
+                            <h3 style={{ margin: 0, color: '#ef4444' }}>Clear All History?</h3>
+                        </div>
+
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+                            This will permanently delete <strong style={{ color: 'white' }}>{history.length} command{history.length !== 1 ? 's' : ''}</strong> from your history.
+                            This action cannot be undone.
+                        </p>
+
+                        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                            <button
+                                onClick={() => setClearModal(false)}
+                                disabled={clearing}
+                                style={{
+                                    padding: '0.625rem 1.25rem',
+                                    background: 'transparent',
+                                    border: '1px solid var(--border)',
+                                    borderRadius: '6px',
+                                    color: 'var(--text-secondary)',
+                                    cursor: 'pointer',
+                                    fontSize: '14px',
+                                    fontWeight: '500'
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={clearHistory}
+                                disabled={clearing}
+                                style={{
+                                    padding: '0.625rem 1.25rem',
+                                    background: '#ef4444',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    color: 'white',
+                                    cursor: clearing ? 'not-allowed' : 'pointer',
+                                    fontSize: '14px',
+                                    fontWeight: '500',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem'
+                                }}
+                            >
+                                {clearing ? (
+                                    <>
+                                        <span style={{
+                                            width: '14px',
+                                            height: '14px',
+                                            border: '2px solid rgba(255,255,255,0.3)',
+                                            borderTop: '2px solid white',
+                                            borderRadius: '50%',
+                                            animation: 'spin 1s linear infinite'
+                                        }} />
+                                        Clearing...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Trash2 size={14} />
+                                        Clear All
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <style>{`
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            `}</style>
         </div>
     );
 };

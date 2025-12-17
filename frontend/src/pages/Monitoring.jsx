@@ -104,7 +104,7 @@ const Monitoring = () => {
     const chartData = formatChartData();
 
     return (
-        <div>
+        <div style={{ padding: '1.5rem' }}>
             <div style={{ marginBottom: '1.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
