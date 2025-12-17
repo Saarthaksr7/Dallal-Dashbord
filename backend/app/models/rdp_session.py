@@ -28,6 +28,9 @@ class RDPSession(SQLModel, table=True):
     recording_name: Optional[str] = None
     recording_size_mb: float = 0.0
     
+    # Thumbnail
+    thumbnail_path: Optional[str] = None  # Path to last screenshot
+    
     # Session Metadata
     started_at: Optional[datetime] = None
     ended_at: Optional[datetime] = None

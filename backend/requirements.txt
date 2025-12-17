@@ -12,11 +12,13 @@ pysnmp
 requests
 python-jose[cryptography]
 argon2-cffi
+docker  # Docker SDK for Python
 apscheduler
 zeroconf
 loguru
 mac_vendor_lookup
 wakeonlan
+psutil  # Process monitoring for guacd manager
 
 # Optional but recommended for production
 redis  # Caching

@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, WebSocket
+from fastapi.responses import Response
 from sqlmodel import Session, select
 from typing import List
 from datetime import datetime
@@ -7,7 +8,11 @@ from app.core.database import get_session
 from app.api.deps import get_current_user
 from app.models.user import User
 from app.models.rdp_session import RDPSession, RDPRecording
+from app.models.rdp_connection import RDPConnectionProfile
 from app.core.security import encrypt_password, decrypt_password
+from app.services.rdp_connection_service import rdp_connection_service
+from app.utils.rdp_file_generator import rdp_file_generator
+from app.services.guacamole_handler import handle_guacamole_connection
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -16,6 +21,7 @@ router = APIRouter()
 # Pydantic Schemas
 # ===========================
 
+# Session Schemas
 class RDPSessionCreate(BaseModel):
     service_id: int | None = None
     host: str
@@ -39,6 +45,48 @@ class RDPSessionUpdate(BaseModel):
 
 class RDPConnectionRequest(BaseModel):
     action: str  # "connect" or "disconnect"
+
+
+# Connection Profile Schemas
+class RDPConnectionProfileCreate(BaseModel):
+    name: str
+    hostname: str
+    port: int = 3389
+    username: str
+    password: str
+    domain: str | None = None
+    os_icon: str = "windows"  # windows, linux, macos
+    resolution: str = "1920x1080"
+    color_depth: int = 24
+    description: str | None = None
+    tags: str | None = None
+    favorite: bool = False
+
+
+class RDPConnectionProfileUpdate(BaseModel):
+    name: str | None = None
+    hostname: str | None = None
+    port: int | None = None
+    username: str | None = None
+    password: str | None = None
+    domain: str | None = None
+    os_icon: str | None = None
+    resolution: str | None = None
+    color_depth: int | None = None
+    description: str | None = None
+    tags: str | None = None
+    favorite: bool | None = None
+
+
+class ConnectionTestRequest(BaseModel):
+    hostname: str
+    port: int = 3389
+
+
+class ConnectionTestResponse(BaseModel):
+    is_reachable: bool
+    message: str
+    response_time_ms: float | None = None
 
 
 # ===========================
@@ -404,3 +452,439 @@ async def delete_rdp_recording(
     db.delete(recording)
     db.commit()
     return None
+
+
+# ===========================
+# Connection Profile Endpoints
+# ===========================
+
+@router.post("/profiles", response_model=dict, status_code=status.HTTP_201_CREATED)
+async def create_connection_profile(
+    profile_data: RDPConnectionProfileCreate,
+    db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    """Create a new RDP connection profile"""
+    
+    # Validate connection parameters
+    is_valid, error_msg = rdp_connection_service.validate_connection_params(
+        profile_data.hostname,
+        profile_data.port,
+        profile_data.username
+    )
+    
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=error_msg)
+    
+    # Encrypt password
+    encrypted_password = encrypt_password(profile_data.password)
+    
+    # Resolve hostname to IP
+    ip_address = rdp_connection_service.resolve_hostname(profile_data.hostname)
+    
+    # Create profile
+    profile = RDPConnectionProfile(
+        user_id=current_user.id,
+        name=profile_data.name,
+        hostname=profile_data.hostname,
+        ip_address=ip_address,
+        port=profile_data.port,
+        username=profile_data.username,
+        password_encrypted=encrypted_password,
+        domain=profile_data.domain,
+        os_icon=profile_data.os_icon,
+        resolution=profile_data.resolution,
+        color_depth=profile_data.color_depth,
+        description=profile_data.description,
+        tags=profile_data.tags,
+        favorite=profile_data.favorite
+    )
+    
+    db.add(profile)
+    db.commit()
+    db.refresh(profile)
+    
+    # Check reachability asynchronously
+    is_reachable, _ = await rdp_connection_service.check_rdp_reachability_async(
+        profile.hostname,
+        profile.port
+    )
+    profile.is_online = is_reachable
+    profile.last_online_check = datetime.utcnow()
+    db.add(profile)
+    db.commit()
+    db.refresh(profile)
+    
+    return {
+        "id": profile.id,
+        "name": profile.name,
+        "hostname": profile.hostname,
+        "ip_address": profile.ip_address,
+        "port": profile.port,
+        "username": profile.username,
+        "domain": profile.domain,
+        "os_icon": profile.os_icon,
+        "resolution": profile.resolution,
+        "color_depth": profile.color_depth,
+        "description": profile.description,
+        "tags": profile.tags,
+        "favorite": profile.favorite,
+        "is_online": profile.is_online,
+        "last_online_check": profile.last_online_check,
+        "created_at": profile.created_at
+    }
+
+
+@router.get("/profiles", response_model=List[dict])
+async def list_connection_profiles(
+    db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+    skip: int = 0,
+    limit: int = 100,
+    favorite_only: bool = False
+):
+    """List all RDP connection profiles for the current user"""
+    
+    statement = select(RDPConnectionProfile).where(
+        RDPConnectionProfile.user_id == current_user.id
+    )
+    
+    if favorite_only:
+        statement = statement.where(RDPConnectionProfile.favorite == True)
+    
+    statement = statement.offset(skip).limit(limit).order_by(
+        RDPConnectionProfile.favorite.desc(),
+        RDPConnectionProfile.last_connected_at.desc().nullslast(),
+        RDPConnectionProfile.name
+    )
+    
+    profiles = db.exec(statement).all()
+    
+    return [
+        {
+            "id": p.id,
+            "name": p.name,
+            "hostname": p.hostname,
+            "ip_address": p.ip_address,
+            "port": p.port,
+            "username": p.username,
+            "domain": p.domain,
+            "os_icon": p.os_icon,
+            "resolution": p.resolution,
+            "color_depth": p.color_depth,
+            "description": p.description,
+            "tags": p.tags,
+            "favorite": p.favorite,
+            "is_online": p.is_online,
+            "last_online_check": p.last_online_check,
+            "thumbnail_path": p.thumbnail_path,
+            "last_connected_at": p.last_connected_at,
+            "created_at": p.created_at,
+            "updated_at": p.updated_at
+        }
+        for p in profiles
+    ]
+
+
+@router.get("/profiles/{profile_id}", response_model=dict)
+async def get_connection_profile(
+    profile_id: int,
+    db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    """Get a specific connection profile"""
+    
+    statement = select(RDPConnectionProfile).where(
+        RDPConnectionProfile.id == profile_id,
+        RDPConnectionProfile.user_id == current_user.id
+    )
+    profile = db.exec(statement).first()
+    
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    
+    return {
+        "id": profile.id,
+        "name": profile.name,
+        "hostname": profile.hostname,
+        "ip_address": profile.ip_address,
+        "port": profile.port,
+        "username": profile.username,
+        "domain": profile.domain,
+        "os_icon": profile.os_icon,
+        "resolution": profile.resolution,
+        "color_depth": profile.color_depth,
+        "description": profile.description,
+        "tags": profile.tags,
+        "favorite": profile.favorite,
+        "is_online": profile.is_online,
+        "last_online_check": profile.last_online_check,
+        "thumbnail_path": profile.thumbnail_path,
+        "last_connected_at": profile.last_connected_at,
+        "created_at": profile.created_at,
+        "updated_at": profile.updated_at
+    }
+
+
+@router.put("/profiles/{profile_id}", response_model=dict)
+async def update_connection_profile(
+    profile_id: int,
+    update_data: RDPConnectionProfileUpdate,
+    db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    """Update a connection profile"""
+    
+    statement = select(RDPConnectionProfile).where(
+        RDPConnectionProfile.id == profile_id,
+        RDPConnectionProfile.user_id == current_user.id
+    )
+    profile = db.exec(statement).first()
+    
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    
+    # Update fields if provided
+    update_dict = update_data.model_dump(exclude_unset=True)
+    
+    # Handle password encryption separately
+    if "password" in update_dict:
+        encrypted_password = encrypt_password(update_dict["password"])
+        update_dict["password_encrypted"] = encrypted_password
+        del update_dict["password"]
+    
+    # Update hostname resolution if hostname changed
+    if "hostname" in update_dict:
+        ip_address = rdp_connection_service.resolve_hostname(update_dict["hostname"])
+        update_dict["ip_address"] = ip_address
+    
+    # Apply updates
+    for key, value in update_dict.items():
+        setattr(profile, key, value)
+    
+    profile.updated_at = datetime.utcnow()
+    
+    db.add(profile)
+    db.commit()
+    db.refresh(profile)
+    
+    return {"message": "Profile updated successfully", "id": profile.id}
+
+
+@router.delete("/profiles/{profile_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_connection_profile(
+    profile_id: int,
+    db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a connection profile"""
+    
+    statement = select(RDPConnectionProfile).where(
+        RDPConnectionProfile.id == profile_id,
+        RDPConnectionProfile.user_id == current_user.id
+    )
+    profile = db.exec(statement).first()
+    
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    
+    db.delete(profile)
+    db.commit()
+    return None
+
+
+@router.get("/profiles/{profile_id}/status", response_model=dict)
+async def check_profile_status(
+    profile_id: int,
+    db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    """Check reachability status of a connection profile"""
+    
+    statement = select(RDPConnectionProfile).where(
+        RDPConnectionProfile.id == profile_id,
+        RDPConnectionProfile.user_id == current_user.id
+    )
+    profile = db.exec(statement).first()
+    
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    
+    # Perform reachability check
+    import time
+    start_time = time.time()
+    
+    is_reachable, error_msg = await rdp_connection_service.check_rdp_reachability_async(
+        profile.hostname,
+        profile.port
+    )
+    
+    response_time = (time.time() - start_time) * 1000  # Convert to milliseconds
+    
+    # Update profile status
+    profile.is_online = is_reachable
+    profile.last_online_check = datetime.utcnow()
+    db.add(profile)
+    db.commit()
+    
+    return {
+        "profile_id": profile.id,
+        "is_online": is_reachable,
+        "message": "Server is reachable" if is_reachable else error_msg,
+        "response_time_ms": response_time if is_reachable else None,
+        "last_check": profile.last_online_check
+    }
+
+
+@router.post("/profiles/test-connection", response_model=ConnectionTestResponse)
+async def test_connection(test_data: ConnectionTestRequest):
+    """Test RDP connection without saving (for validation before creating profile)"""
+    
+    # Validate parameters
+    is_valid, error_msg = rdp_connection_service.validate_connection_params(
+        test_data.hostname,
+        test_data.port,
+        "test_user"  # Dummy username for validation
+    )
+    
+    if not is_valid:
+        return ConnectionTestResponse(
+            is_reachable=False,
+            message=error_msg,
+            response_time_ms=None
+        )
+    
+    # Perform reachability check
+    import time
+    start_time = time.time()
+    
+    is_reachable, error_msg = await rdp_connection_service.check_rdp_reachability_async(
+        test_data.hostname,
+        test_data.port
+    )
+    
+    response_time = (time.time() - start_time) * 1000
+    
+    return ConnectionTestResponse(
+        is_reachable=is_reachable,
+        message="Connection successful! RDP port is accessible." if is_reachable else error_msg or "Connection failed",
+        response_time_ms=response_time if is_reachable else None
+    )
+
+
+@router.get("/profiles/{profile_id}/download-rdp")
+async def download_rdp_file(
+    profile_id: int,
+    db: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+    include_password: bool = False  # Security: default to NOT including password
+):
+    """Generate and download .rdp file for a connection profile"""
+    
+    statement = select(RDPConnectionProfile).where(
+        RDPConnectionProfile.id == profile_id,
+        RDPConnectionProfile.user_id == current_user.id
+    )
+    profile = db.exec(statement).first()
+    
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    
+    # Decrypt password if needed
+    password = None
+    if include_password and profile.password_encrypted:
+        password = decrypt_password(profile.password_encrypted)
+    
+    # Generate .rdp file content
+    rdp_content = rdp_file_generator.generate_rdp_file(
+        host=profile.hostname,
+        username=profile.username,
+        port=profile.port,
+        domain=profile.domain,
+        resolution=profile.resolution,
+        color_depth=profile.color_depth,
+        password=password,
+        include_password=include_password,
+        fullscreen=False  # User can change this in the .rdp file settings
+    )
+    
+    # Generate safe filename
+    filename = rdp_file_generator.generate_filename(profile.name)
+    
+    # Update last connected timestamp
+    profile.last_connected_at = datetime.utcnow()
+    db.add(profile)
+    db.commit()
+    
+    # Return file as downloadable attachment
+    return Response(
+        content=rdp_content,
+        media_type="application/x-rdp",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Type": "application/x-rdp"
+        }
+    )
+
+
+# ===========================
+# WebSocket Endpoint (Guacamole)
+# ===========================
+
+@router.websocket("/ws/{profile_id}")
+async def rdp_websocket(
+    profile_id: int,
+    websocket: WebSocket,
+    db: Session = Depends(get_session),
+):
+    """
+    WebSocket endpoint for browser-based RDP connections via Guacamole.
+    
+    This endpoint establishes a WebSocket connection between the browser client
+    and the Guacamole daemon (guacd), enabling in-browser RDP sessions.
+    
+    Authentication:
+        Pass JWT token as query parameter: ?token=<jwt_token>
+        Example: ws://localhost:8000/api/v1/rdp/ws/1?token=eyJ0eXAi...
+    
+    Usage:
+        ws://localhost:8000/api/v1/rdp/ws/{profile_id}?token=<jwt>
+    """
+    # Extract token from query parameters
+    query_params = dict(websocket.query_params)
+    token = query_params.get('token')
+    
+    if not token:
+        await websocket.close(code=1008, reason="Missing authentication token")
+        return
+    
+    # Validate JWT token
+    try:
+        from app.core.security import decode_token
+        payload = decode_token(token)
+        user_id = payload.get("sub")
+ 
+        if not user_id:
+            await websocket.close(code=1008, reason="Invalid token")
+            return
+        
+        # Get user from database
+        from app.models.user import User as UserModel
+        user = db.exec(select(UserModel).where(UserModel.id == int(user_id))).first()
+        
+        if not user:
+            await websocket.close(code=1008, reason="User not found")
+            return
+            
+    except Exception as e:
+        await websocket.close(code=1008, reason=f"Authentication failed: {str(e)}")
+        return
+    
+    # Handle the Guacamole connection with authenticated user
+    await handle_guacamole_connection(
+        websocket=websocket,
+        profile_id=profile_id,
+        db=db,
+        current_user=user
+    )
+

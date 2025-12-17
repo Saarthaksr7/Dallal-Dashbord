@@ -26,6 +26,7 @@ if settings.is_production and settings.SENTRY_DSN:
 from app.services.status_engine import service_monitor
 from app.services.discovery import discovery_engine
 from app.services.trap_receiver import trap_receiver
+from app.services.guacd_manager import guacd_manager
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
@@ -50,6 +51,13 @@ async def lifespan(app: FastAPI):
     trap_receiver.start()
     logger.info("SNMP Trap Receiver started")
 
+    # Start Guacamole Daemon (guacd)
+    guacd_started = guacd_manager.start()
+    if guacd_started:
+        logger.info(f"Guacamole Daemon (guacd) started on {guacd_manager.host}:{guacd_manager.port}")
+    else:
+        logger.warning("Failed to start guacd - RDP functionality will not be available")
+
     # Initialize Email Scheduler
     from apscheduler.schedulers.asyncio import AsyncIOScheduler
     from app.services.email_service import email_service
@@ -72,6 +80,7 @@ async def lifespan(app: FastAPI):
     service_monitor.stop()
     discovery_engine.stop()
     trap_receiver.stop()
+    guacd_manager.stop()
     logger.info("Application shutdown")
 
 app = FastAPI(

@@ -2,6 +2,7 @@ from sqlmodel import SQLModel, create_engine, Session, select
 from .config import settings
 from app.models.user import User
 from app.models.rdp_session import RDPSession, RDPRecording  # Import for table creation
+from app.models.rdp_connection import RDPConnectionProfile  # Import for table creation
 from app.core.security import get_password_hash
 
 connect_args = {"check_same_thread": False}

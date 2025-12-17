@@ -76,6 +76,28 @@ def create_access_token(subject: Union[str, Any], expires_delta: timedelta = Non
     encoded_jwt = jwt.encode(to_encode, app_settings.SECRET_KEY, algorithm=app_settings.ALGORITHM)
     return encoded_jwt
 
+def decode_token(token: str) -> dict:
+    """
+    Decode and validate a JWT access token.
+    
+    Args:
+        token: JWT token string
+        
+    Returns:
+        Decoded token payload
+        
+    Raises:
+        Exception: If token is invalid or expired
+    """
+    try:
+        payload = jwt.decode(token, app_settings.SECRET_KEY, algorithms=[app_settings.ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise Exception("Token has expired")
+    except jwt.JWTError as e:
+        raise Exception(f"Invalid token: {str(e)}")
+
+
 # ==========================================
 # Password Validation & Account Lockout
 # ==========================================

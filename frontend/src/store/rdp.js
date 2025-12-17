@@ -8,11 +8,13 @@ export const useRDPStore = create(
             // State
             sessions: [],
             recordings: [],
+            profiles: [],  // Connection profiles
             loading: false,
             error: null,
             selectedSession: null,
+            selectedProfile: null,
 
-            // Actions
+            // Session Actions
             fetchSessions: async () => {
                 set({ loading: true, error: null });
                 try {
@@ -122,6 +124,140 @@ export const useRDPStore = create(
                 }
             },
 
+            // Connection Profile Actions
+            fetchProfiles: async () => {
+                set({ loading: true, error: null });
+                try {
+                    const response = await api.get('/rdp/profiles');
+                    set({ profiles: response.data, loading: false });
+                } catch (error) {
+                    console.error('Fetch profiles failed', error);
+                    set({ error: error.response?.data?.detail || 'Failed to fetch profiles', loading: false });
+                }
+            },
+
+            createProfile: async (profileData) => {
+                set({ loading: true, error: null });
+                try {
+                    const response = await api.post('/rdp/profiles', profileData);
+                    const newProfile = response.data;
+
+                    // Add to profiles list
+                    set(state => ({
+                        profiles: [newProfile, ...state.profiles],
+                        loading: false
+                    }));
+
+                    return newProfile;
+                } catch (error) {
+                    console.error('Create profile failed', error);
+                    set({ error: error.response?.data?.detail || 'Failed to create profile', loading: false });
+                    throw error;
+                }
+            },
+
+            updateProfile: async (profileId, updateData) => {
+                set({ loading: true, error: null });
+                try {
+                    await api.put(`/rdp/profiles/${profileId}`, updateData);
+
+                    // Update in profiles list
+                    set(state => ({
+                        profiles: state.profiles.map(p =>
+                            p.id === profileId ? { ...p, ...updateData, updated_at: new Date().toISOString() } : p
+                        ),
+                        loading: false
+                    }));
+                } catch (error) {
+                    console.error('Update profile failed', error);
+                    set({ error: error.response?.data?.detail || 'Failed to update profile', loading: false });
+                    throw error;
+                }
+            },
+
+            deleteProfile: async (profileId) => {
+                set({ loading: true, error: null });
+                try {
+                    await api.delete(`/rdp/profiles/${profileId}`);
+
+                    // Remove from profiles list
+                    set(state => ({
+                        profiles: state.profiles.filter(p => p.id !== profileId),
+                        loading: false
+                    }));
+                } catch (error) {
+                    console.error('Delete profile failed', error);
+                    set({ error: error.response?.data?.detail || 'Failed to delete profile', loading: false });
+                    throw error;
+                }
+            },
+
+            checkProfileStatus: async (profileId) => {
+                try {
+                    const response = await api.get(`/rdp/profiles/${profileId}/status`);
+                    const statusData = response.data;
+
+                    // Update profile status in state
+                    set(state => ({
+                        profiles: state.profiles.map(p =>
+                            p.id === profileId ? { ...p, is_online: statusData.is_online, last_online_check: statusData.last_check } : p
+                        )
+                    }));
+
+                    return statusData;
+                } catch (error) {
+                    console.error('Check profile status failed', error);
+                    return null;
+                }
+            },
+
+            testConnection: async (hostname, port = 3389) => {
+                try {
+                    const response = await api.post('/rdp/profiles/test-connection', { hostname, port });
+                    return response.data;
+                } catch (error) {
+                    console.error('Test connection failed', error);
+                    throw error;
+                }
+            },
+
+            downloadRDPFile: async (profileId, includePassword = false) => {
+                try {
+                    const response = await api.get(`/rdp/profiles/${profileId}/download-rdp`, {
+                        params: { include_password: includePassword },
+                        responseType: 'blob'
+                    });
+
+                    // Create download link
+                    const blob = new Blob([response.data], { type: 'application/x-rdp' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+
+                    // Extract filename from Content-Disposition header or use default
+                    const contentDisposition = response.headers['content-disposition'];
+                    let filename = 'connection.rdp';
+                    if (contentDisposition) {
+                        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+                        if (matches != null && matches[1]) {
+                            filename = matches[1].replace(/['"]/g, '');
+                        }
+                    }
+
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+
+                    return true;
+                } catch (error) {
+                    console.error('Download RDP file failed', error);
+                    set({ error: 'Failed to download RDP file' });
+                    throw error;
+                }
+            },
+
             // Recordings
             fetchRecordings: async () => {
                 set({ loading: true, error: null });
@@ -153,6 +289,7 @@ export const useRDPStore = create(
 
             // Utility
             setSelectedSession: (session) => set({ selectedSession: session }),
+            setSelectedProfile: (profile) => set({ selectedProfile: profile }),
             clearError: () => set({ error: null }),
         }),
         {
@@ -160,7 +297,8 @@ export const useRDPStore = create(
             partialize: (state) => ({
                 // Don't persist loading or error states
                 sessions: state.sessions,
-                recordings: state.recordings
+                recordings: state.recordings,
+                profiles: state.profiles
             })
         }
     )
