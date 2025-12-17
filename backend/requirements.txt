@@ -1,28 +1,64 @@
-fastapi
-uvicorn[standard]
-gunicorn  # Production WSGI server
-slowapi  # Rate limiting
-sqlmodel
-pydantic-settings
-python-multipart
-pyjwt
-passlib[bcrypt]
-httpx
-pysnmp
-requests
-python-jose[cryptography]
-argon2-cffi
-docker  # Docker SDK for Python
-apscheduler
-zeroconf
-loguru
-mac_vendor_lookup
-wakeonlan
-psutil  # Process monitoring for guacd manager
+# Dallal Dashboard - Base Requirements
+# This file contains platform-neutral core dependencies
+# For platform-specific installations, use:
+#   - requirements-win.txt for Windows
+#   - requirements-linux.txt for Linux
+
+# Core Web Framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+gunicorn>=21.2.0  # Production WSGI server
+
+# Rate Limiting & Security
+slowapi>=0.1.9
+python-jose[cryptography]>=3.3.0
+pyjwt>=2.8.0
+passlib[bcrypt]>=1.7.4
+argon2-cffi>=23.1.0
+
+# Database & ORM
+sqlmodel>=0.0.14
+pydantic-settings>=2.0.3
+
+# File Upload & Processing
+python-multipart>=0.0.6
+
+# HTTP Client
+httpx>=0.25.0
+requests>=2.31.0
+
+# SNMP Support
+pysnmp>=4.4.12
+
+# Docker SDK
+docker>=6.1.3
+
+# Task Scheduling
+apscheduler>=3.10.4
+
+# Network Discovery
+zeroconf>=0.120.0
+
+# Logging
+loguru>=0.7.2
+
+# Network Utilities
+mac-vendor-lookup>=0.1.12
+wakeonlan>=3.0.0
+
+# System Monitoring
+psutil>=5.9.6
+
+# SSH/SFTP Support
+paramiko>=3.3.1
 
 # Optional but recommended for production
-redis  # Caching
-psycopg2-binary  # PostgreSQL adapter
-pymysql  # MySQL adapter (alternative)
-sentry-sdk[fastapi]  # Error tracking
-prometheus-fastapi-instrumentator  # Metrics
+redis>=5.0.0  # Caching
+psycopg2-binary>=2.9.9  # PostgreSQL adapter
+pymysql>=1.1.0  # MySQL adapter (alternative)
+sentry-sdk[fastapi]>=1.38.0  # Error tracking
+prometheus-fastapi-instrumentator>=6.1.0  # Metrics
+
+# Email support (if needed)
+aiosmtplib>=3.0.0
+email-validator>=2.1.0

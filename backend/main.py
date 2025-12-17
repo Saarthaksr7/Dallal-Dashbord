@@ -1,7 +1,8 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from prometheus_fastapi_instrumentator import Instrumentator
 import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
@@ -149,6 +150,43 @@ app.include_router(rdp.router, prefix=f"{settings.API_V1_STR}/rdp", tags=["rdp"]
 
 # Prometheus Metrics - Exposes /metrics endpoint for monitoring
 Instrumentator().instrument(app).expose(app)
+
+# Mount static files for frontend (for standalone executable)
+import os
+import sys
+
+# Determine if running as PyInstaller bundle
+if getattr(sys, 'frozen', False):
+    # Running as PyInstaller bundle
+    frontend_dir = os.path.join(sys._MEIPASS, 'frontend')
+else:
+    # Running as normal Python script (development)
+    frontend_dir = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'dist')
+
+# Check if frontend directory exists before mounting
+if os.path.exists(frontend_dir):
+    # Mount static assets
+    assets_path = os.path.join(frontend_dir, 'assets')
+    if os.path.exists(assets_path):
+        app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
+    
+    # Serve index.html for all non-API routes (React Router support)
+    @app.get("/{full_path:path}")
+    async def serve_frontend(full_path: str):
+        # Don't serve frontend for API routes
+        if full_path.startswith("api/") or full_path.startswith("metrics") or full_path.startswith("docs") or full_path.startswith("openapi.json"):
+            return JSONResponse({"detail": "Not found"}, status_code=404)
+        
+        # Serve index.html for all other routes
+        index_file = os.path.join(frontend_dir, 'index.html')
+        if os.path.exists(index_file):
+            return FileResponse(index_file)
+        else:
+            return JSONResponse({"detail": "Frontend not found"}, status_code=404)
+    
+    logger.info(f"Frontend static files mounted from: {frontend_dir}")
+else:
+    logger.warning(f"Frontend directory not found at: {frontend_dir}")
 
 if __name__ == "__main__":
     import uvicorn

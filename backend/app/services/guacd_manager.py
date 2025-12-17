@@ -123,6 +123,21 @@ class GuacdManager:
             logger.warning("guacd is already running")
             return True
         
+        # Check if port is already in use (e.g. by Docker container)
+        if not self._is_port_available():
+            logger.warning(f"Port {self.port} is already in use. Checking if guacd is already running...")
+            # Try to connect to see if it's actually guacd
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.settimeout(2)
+                    s.connect((self.host, self.port))
+                    logger.info("guacd appears to be already running on the port (likely Docker)")
+                    self._is_running = True
+                    return True
+            except:
+                logger.error(f"Port {self.port} is in use by another process")
+                return False
+
         # Find guacd binary
         guacd_path = self._find_guacd_binary()
         if not guacd_path:
@@ -132,21 +147,6 @@ class GuacdManager:
             return False
         
         logger.info(f"Found guacd at: {guacd_path}")
-        
-        # Check if port is already in use
-        if not self._is_port_available():
-            logger.warning(f"Port {self.port} is already in use. Checking if guacd is already running...")
-            # Try to connect to see if it's actually guacd
-            try:
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                    s.settimeout(2)
-                    s.connect((self.host, self.port))
-                    logger.info("guacd appears to be already running on the port")
-                    self._is_running = True
-                    return True
-            except:
-                logger.error(f"Port {self.port} is in use by another process")
-                return False
         
         # Start guacd as a subprocess
         try:
