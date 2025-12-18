@@ -226,6 +226,78 @@ The easiest way to get started is using the automated installation scripts:
    - API Documentation: `http://localhost:8000/docs`
    - Default login: Create admin user on first visit
 
+### Quick Start (Linux)
+
+**All-in-One Installer** with Docker, Guacamole, and systemd integration:
+
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/Saarthaksr7/Dallal-Dashbord.git
+   cd "Dallal Dashbord"
+   ```
+
+2. **Run the Interactive Installer**
+   ```bash
+   cd "install files"
+   chmod +x install-linux-all.sh
+   ./install-linux-all.sh
+   ```
+
+3. **Choose Installation Type**
+   - **Option 1**: Full Installation (Dashboard + Docker + Guacamole) ⭐ Recommended
+   - **Option 2**: Dashboard Only
+   - **Option 3**: Dashboard + Docker
+   - **Option 4**: Dashboard + Guacamole
+   - **Option 5**: Custom Installation
+
+4. **The Installer Will**:
+   - ✅ Install all system dependencies (auto-detects your distro)
+   - ✅ Set up Docker Engine (optional)
+   - ✅ Install Apache Guacamole for RDP support (optional)
+   - ✅ Create Python virtual environment and install packages
+   - ✅ Build production frontend
+   - ✅ Generate secure .env configuration
+   - ✅ Create systemd service for auto-start
+   - ✅ Configure auto-start at boot (optional)
+
+5. **Supported Distributions**:
+   - Ubuntu 18.04, 20.04, 22.04, 24.04
+   - Debian 10, 11, 12
+   - Fedora 35+
+   - RHEL/CentOS 8+
+   - Arch Linux
+
+6. **Service Management** (after installation):
+   ```bash
+   # Start dashboard
+   sudo systemctl start dallal-dashboard
+   
+   # Stop dashboard
+   sudo systemctl stop dallal-dashboard
+   
+   # Check status
+   sudo systemctl status dallal-dashboard
+   
+   # Enable auto-start at boot
+   sudo systemctl enable dallal-dashboard
+   
+   # View logs
+   sudo journalctl -u dallal-dashboard -f
+   ```
+
+7. **Quick Start Script** (alternative to systemd):
+   ```bash
+   cd "install files"
+   chmod +x start-dashboard.sh
+   ./start-dashboard.sh
+   ```
+
+8. **Access the Dashboard**
+   - Open browser: `http://localhost:8000`
+   - API Documentation: `http://localhost:8000/docs`
+
+**Need Help?** See [`install files/QUICKSTART_LINUX.md`](install%20files/QUICKSTART_LINUX.md) for detailed instructions and troubleshooting.
+
 ### Manual Installation
 
 #### Backend Setup
@@ -688,12 +760,16 @@ Dallal Dashboard/
 │   └── index.html             # HTML template
 │
 ├── install files/              # Installation utilities
-│   ├── setup-all.bat                 # Complete setup
-│   ├── install-dependencies.bat     # Install deps
-│   ├── setup-config.bat             # Config wizard
-│   ├── build-frontend.bat           # Build frontend
-│   ├── start-dashboard.bat          # Start server
-│   └── CONFIG_GUIDE.md              # Config documentation
+│   ├── setup-all.bat                 # Complete setup (Windows)
+│   ├── install-dependencies.bat      # Install deps (Windows)
+│   ├── setup-config.bat              # Config wizard (Windows)
+│   ├── build-frontend.bat            # Build frontend (Windows)
+│   ├── start-dashboard.bat           # Start server (Windows)
+│   ├── install-linux-all.sh          # All-in-one installer (Linux)
+│   ├── start-dashboard.sh            # Quick start (Linux)
+│   ├── CONFIG_GUIDE.md               # Config documentation
+│   ├── QUICKSTART_LINUX.md           # Linux quick start guide
+│   └── README_LINUX.md               # Linux installation guide
 │
 ├── scripts/                    # Utility scripts
 │   ├── backup_database.py            # DB backup
