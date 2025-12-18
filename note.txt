@@ -1,0 +1,10 @@
+dashboard 
+services 
+docker manager :-done
+monitoring :-done
+ops center 
+app store 
+ssh terminal  :-done
+rdp launcher :-doing
+reports 
+settings 
