@@ -9,7 +9,7 @@ SETLOCAL EnableDelayedExpansion
 cd /d "%~dp0"
 
 SET PROJECT_DIR=..
-SET RELEASE_NAME=Dallal-Dashboard-Release
+SET RELEASE_NAME=Dallal-Dashboard-Release-win-portab
 SET RELEASE_DIR=%PROJECT_DIR%\%RELEASE_NAME%
 SET ZIP_FILE=%PROJECT_DIR%\%RELEASE_NAME%.zip
 
