@@ -41,14 +41,18 @@ export default defineConfig(({ mode }) => {
           manualChunks: (id) => {
             // Vendor chunks - libraries that rarely change
             if (id.includes('node_modules')) {
+              // UI libraries - CHECK FIRST before React (lucide-react contains 'react')
+              if (id.includes('lucide-react')) {
+                return 'vendor-ui'
+              }
+
+              if (id.includes('recharts')) {
+                return 'vendor-ui'
+              }
+
               // React core
               if (id.includes('react') || id.includes('react-dom')) {
                 return 'vendor-react'
-              }
-
-              // UI libraries
-              if (id.includes('lucide-react') || id.includes('recharts')) {
-                return 'vendor-ui'
               }
 
               // Heavy editors
@@ -120,6 +124,7 @@ export default defineConfig(({ mode }) => {
         'zustand',
         'axios',
         'wouter',
+        'lucide-react',
       ],
       exclude: [
         '@monaco-editor/react', // Lazy loaded
