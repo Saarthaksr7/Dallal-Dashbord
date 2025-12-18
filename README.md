@@ -1,372 +1,885 @@
 # Dallal Dashboard
 
-<div align="center">
+> **Production-Ready Service Management Platform for Homelabs and Enterprise Environments**
 
-![Dallal Dashboard](https://via.placeholder.com/800x200/667eea/ffffff?text=Dallal+Dashboard)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/Saarthaksr7/Dallal-Dashbord)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/)
+[![React](https://img.shields.io/badge/react-18.3-blue.svg)](https://reactjs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104%2B-009688.svg)](https://fastapi.tiangolo.com/)
 
-**Production-Ready Service Management Platform for Homelabs**
+## 📋 Table of Contents
 
-[![License MIT](https://img.shields.io/github/license/Saarthaksr7/Dallal-Dashbord)](LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/Saarthaksr7/Dallal-Dashbord?style=social)](https://github.com/Saarthaksr7/Dallal-Dashbord)
-[![GitHub forks](https://img.shields.io/github/forks/Saarthaksr7/Dallal-Dashbord?style=social)](https://github.com/Saarthaksr7/Dallal-Dashbord/fork)
-[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](docker-compose.homelab.yml)
-[![Security](https://img.shields.io/badge/Security-Hardened-green.svg)](#security)
-[![Performance](https://img.shields.io/badge/Performance-Optimized-green.svg)](#performance)
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [Architecture](#architecture)
+- [Technology Stack](#technology-stack)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Usage](#usage)
+- [API Documentation](#api-documentation)
+- [Monitoring & Observability](#monitoring--observability)
+- [Security](#security)
+- [Development](#development)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
+- [License](#license)
 
-Manage your homelab services, Docker containers, and infrastructure with a beautiful, secure, and performant dashboard.
+## 🎯 Overview
 
-**Created by [SR7](https://github.com/Saarthaksr7)**
+**Dallal Dashboard** is a comprehensive, enterprise-grade service management platform designed for homelabs, IT operations, and infrastructure monitoring. It provides unified control over services, containers, remote systems, and network infrastructure with real-time monitoring, intelligent alerting, and advanced automation capabilities.
 
-[Features](#features) •
-[Quick Start](#quick-start) •
-[Homelab Setup](#homelab-deployment) •
-[Documentation](#documentation) •
-[Contributing](CONTRIBUTING.md)
+### What Makes Dallal Dashboard Special?
 
-</div>
+- 🚀 **All-in-One Platform**: Manage services, Docker containers, SSH/RDP sessions, SFTP transfers, and network monitoring from a single interface
+- ⚡ **Real-Time Monitoring**: Live service health checks, resource monitoring, and instant notifications
+- 🔐 **Security-First**: JWT authentication, rate limiting, audit logging, encrypted credential storage
+- 🎨 **Modern UI**: Responsive React interface with dark mode, i18n support (multiple languages), and accessibility features
+- 🔧 **Easy Setup**: Automated installation scripts with interactive configuration wizard
+- 📊 **Observable**: Built-in Prometheus metrics, Grafana dashboards, and Sentry error tracking
+- 🌐 **Network Intelligence**: mDNS/DNS-SD service discovery, Wake-on-LAN, SNMP trap reception
+- 🐳 **Docker Native**: Full Docker integration for container lifecycle management
 
----
+## ✨ Key Features
 
-## ✨ Features
+### Service Management
+- **Smart Service Discovery**: Automatic mDNS/DNS-SD network discovery
+- **Health Monitoring**: Configurable health checks (HTTP, TCP, ICMP ping)
+- **Service Status Engine**: Real-time status updates with WebSocket support
+- **Custom Groups & Tags**: Organize services with flexible categorization
+- **Favorite Services**: Quick access to frequently used services
 
-### 🔒 Enterprise-Grade Security
-- **Input Validation**: XSS and SQL injection protection
-- **Authentication**: JWT with refresh tokens (7-day expiry)
-- **Password Security**: Argon2 hashing with strength requirements
-- **Account Lockout**: 5 attempts → 15-minute lockout
-- **File Upload Security**: Size limits, extension validation, path protection
-- **Audit Logging**: Complete operation tracking for compliance
+### Remote Access
+- **SSH Terminal**: Browser-based SSH client with xterm.js
+  - Session management and history
+  - Custom SSH keys support
+  - SFTP file browser with upload/download
+  - Saved connection profiles
+- **RDP (Remote Desktop)**: Built-in RDP client via Guacamole
+  - Session recording and playback
+  - Screen sharing capabilities
+  - Multi-session management
+  - Connection history tracking
 
-### ⚡ Performance Optimized
-- **52% Smaller Bundles**: Code splitting and tree shaking
-- **40% Faster Loads**: Optimized build and lazy loading
-- **Smart Caching**: Redis with in-memory fallback
-- **Debounced Search**: 80% fewer API calls
-- **Pagination**: Handle 10,000+ items smoothly
-- **React.memo**: 70% fewer re-renders
+### Docker Management
+- **Container Lifecycle**: Start, stop, restart, remove containers
+- **Real-Time Logs**: Stream container logs with search and filtering
+- **Resource Monitoring**: CPU, memory, and network usage tracking
+- **Image Management**: Pull, build, and manage Docker images
+- **Network & Volume Management**: Complete Docker networking control
 
-### 🏗️ Production Infrastructure
-- **Docker**: Multi-stage builds with health checks
-- **PostgreSQL**: Connection pooling and optimization
-- **Redis**: Distributed caching
-- **Nginx**: HTTP/2, gzip compression, SSL/TLS
-- **Graceful Shutdown**: Proper resource cleanup
+### Operations Center
+- **Network Topology Visualization**: Interactive network map with reactflow
+- **Service Dependency Tracking**: Understand service relationships
+- **SNMP Trap Receiver**: Monitor network device events
+- **Wake-on-LAN**: Remote system power management
+- **Batch Operations**: Execute actions on multiple services
 
-### 🎨 User Experience
-- **Modern UI**: Glass-morphism design with dark mode
-- **Responsive**: Mobile, tablet, and desktop optimized
-- **Internationalization**: 6 languages (Hindi, English, Russian, French, Dutch, Korean)
-- **Error Handling**: Beautiful error pages with recovery options
-- **Loading States**: Skeleton loaders for better perceived performance
+### Monitoring & Alerting
+- **Multi-Channel Alerts**: Email, webhooks, in-app notifications
+- **Alert Digest**: Hourly, daily, and weekly report summaries
+- **Customizable Thresholds**: Define alert rules per service
+- **Incident Management**: Track and resolve service incidents
+- **Metrics Dashboard**: Real-time charts and historical data
 
----
+### Advanced Features
+- **Version Control Integration**: Track configuration changes with Git
+- **Backup & Restore**: Automated database backups with retention policies
+- **API Key Management**: Secure third-party integrations
+- **Audit Logging**: Complete activity tracking for compliance
+- **Webhooks**: Integrate with external systems (Slack, Discord, etc.)
+- **App Store**: Discover and deploy pre-configured service templates
+- **Report Generation**: Export service status and performance reports
 
-## 🚀 Quick Start
+## 🏗 Architecture
 
-### Development Mode
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Dallal Dashboard                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌────────────────────┐         ┌────────────────────┐     │
+│  │   React Frontend   │────────▶│  FastAPI Backend   │     │
+│  │  (Vite + Zustand)  │  HTTP   │   (Python 3.8+)    │     │
+│  │                    │◀────────│                    │     │
+│  └────────────────────┘ WebSocket└────────────────────┘     │
+│           │                              │                   │
+│           │                              │                   │
+│           ▼                              ▼                   │
+│  ┌────────────────────┐         ┌────────────────────┐     │
+│  │   UI Components    │         │  Background Services│     │
+│  │  - 24 Pages        │         │  - Status Engine    │     │
+│  │  - 63+ Components  │         │  - Discovery Engine │     │
+│  │  - i18n Support    │         │  - SNMP Trap Rx     │     │
+│  │  - Accessibility   │         │  - Email Scheduler  │     │
+│  └────────────────────┘         │  - Guacd Manager    │     │
+│                                  └────────────────────┘     │
+│                                            │                 │
+│                                            ▼                 │
+│                                  ┌────────────────────┐     │
+│                                  │   Data Layer       │     │
+│                                  │  - SQLite/PostgreSQL│    │
+│                                  │  - Redis (optional) │     │
+│                                  │  - File Storage     │     │
+│                                  └────────────────────┘     │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+         ┌────────────────────────────────────┐
+         │    External Integrations           │
+         ├────────────────────────────────────┤
+         │  • Docker Engine (unix socket/tcp) │
+         │  • SSH/SFTP Servers (paramiko)     │
+         │  • RDP Servers (guacd protocol)    │
+         │  • SNMP Devices (trap receiver)    │
+         │  • Network Services (mDNS)         │
+         │  • Email (SMTP)                    │
+         │  • Prometheus/Grafana              │
+         │  • Sentry (error tracking)         │
+         └────────────────────────────────────┘
+```
 
-```bash
-# Clone repository
-git clone <repository-url>
-cd "Dallal Dashbord"
+## 🛠 Technology Stack
+
+### Backend
+- **Framework**: FastAPI 0.104+ (high-performance async web framework)
+- **Server**: Uvicorn (ASGI) / Gunicorn (production)
+- **ORM**: SQLModel (SQLAlchemy core with Pydantic models)
+- **Database**: SQLite (default) / PostgreSQL / MySQL
+- **Caching**: Redis (optional)
+- **Task Scheduling**: APScheduler (email digests, cleanup tasks)
+- **Authentication**: JWT tokens (PyJWT + python-jose)
+- **Password Hashing**: Argon2-CFFI (secure)
+- **Rate Limiting**: SlowAPI middleware
+
+### Frontend
+- **Framework**: React 18.3
+- **Build Tool**: Vite 7.2 (fast HMR, optimized builds)
+- **Routing**: Wouter (lightweight React router)
+- **State Management**: Zustand 5.0 (simple, scalable)
+- **HTTP Client**: Axios 1.13
+- **UI Components**: Custom component library
+- **Icons**: Lucide React (modern icon set)
+- **Terminal**: xterm.js (SSH console)
+- **Code Editor**: Monaco Editor (config editing)
+- **Charts**: Recharts (metrics visualization)
+- **Drag & Drop**: @dnd-kit (service reordering)
+- **Flow Diagrams**: ReactFlow (network topology)
+- **Internationalization**: i18next + react-i18next
+- **Notifications**: React Hot Toast
+
+### Infrastructure & Tools
+- **Containerization**: Docker support
+- **Reverse Proxy**: Nginx configuration included
+- **Monitoring**: Prometheus metrics + Grafana dashboards
+- **Error Tracking**: Sentry SDK
+- **Logging**: Loguru (structured logging)
+- **Network**: 
+  - Zeroconf (mDNS/DNS-SD discovery)
+  - PySNMP (SNMP trap handling)
+  - WakeOnLAN (remote power management)
+  - Paramiko (SSH/SFTP)
+- **System**: psutil (resource monitoring)
+
+### Development Tools
+- **Linting**: ESLint 9.39 (frontend)
+- **Testing**: Vitest (frontend unit tests)
+- **Build Optimization**: Terser, rollup-plugin-visualizer
+- **Compression**: vite-plugin-compression2 (gzip/brotli)
+
+## 📦 Installation
+
+### Prerequisites
+
+- **Python**: 3.8 or higher
+- **Node.js**: 16+ and npm (for frontend development)
+- **Operating System**: Windows 10+, Ubuntu 20.04+, Debian 11+, RHEL 8+
+- **Optional**: Docker (for container management features)
+- **Optional**: PostgreSQL/MySQL (for production deployments)
+- **Optional**: Redis (for caching and performance)
+
+### Quick Start (Windows)
+
+The easiest way to get started is using the automated installation scripts:
+
+1. **Clone the Repository**
+   ```powershell
+   git clone https://github.com/Saarthaksr7/Dallal-Dashbord.git
+   cd "Dallal Dashbord"
+   ```
+
+2. **Run Complete Setup** (Recommended)
+   ```powershell
+   cd "install files"
+   .\setup-all.bat
+   ```
+   
+   This script will:
+   - ✅ Install Python dependencies in virtual environment
+   - ✅ Build optimized frontend production bundle
+   - ✅ Generate secure configuration (.env file)
+   - ✅ Launch the dashboard automatically
+
+3. **Access the Dashboard**
+   - Open browser: `http://localhost:8000`
+   - API Documentation: `http://localhost:8000/docs`
+   - Default login: Create admin user on first visit
+
+### Manual Installation
+
+#### Backend Setup
+
+```powershell
+# Navigate to backend directory
+cd backend
+
+# Create virtual environment
+python -m venv .venv
+
+# Activate virtual environment
+# Windows:
+.venv\Scripts\activate
+# Linux/Mac:
+source .venv/bin/activate
 
 # Install dependencies
+# Windows:
+pip install -r requirements-win.txt
+# Linux:
+pip install -r requirements-linux.txt
+
+# Configure environment
+copy .env.example .env
+# Edit .env with your settings (see Configuration section)
+
+# Initialize database and start server
+python main.py
+```
+
+#### Frontend Setup (Development)
+
+```bash
+# Navigate to frontend directory
 cd frontend
-npm install --legacy-peer-deps
 
-cd ../backend
-pip install -r requirements.txt
+# Install dependencies
+npm install
 
-# Start development servers
-# Terminal 1 - Backend
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+### Alternative Installation Methods
+
+#### Individual Components Setup
+
+```powershell
+cd "install files"
+
+# 1. Install dependencies only
+.\install-dependencies.bat
+
+# 2. Configure environment (interactive wizard)
+.\setup-config.bat
+
+# 3. Build frontend
+.\build-frontend.bat
+
+# 4. Start dashboard
+.\start-dashboard.bat
+```
+
+## ⚙️ Configuration
+
+### Configuration Wizard
+
+The easiest way to configure Dallal Dashboard is using the interactive wizard:
+
+```powershell
+cd "install files"
+.\setup-config.bat
+```
+
+**Setup Modes:**
+- **Quick Setup** (5 min): Secure defaults, auto-generated keys, SQLite database
+- **Custom Setup** (10 min): Choose database, configure email, custom ports
+- **Advanced Setup** (15 min): Full control, Redis, Sentry, custom policies
+
+### Manual Configuration
+
+Edit `backend/.env` file with your settings:
+
+```env
+# Application
+PROJECT_NAME=Dallal Dashboard
+ENVIRONMENT=production  # development, staging, production
+API_V1_STR=/api/v1
+
+# Security (CRITICAL: Change in production!)
+SECRET_KEY=your-64-character-random-string-here
+REFRESH_SECRET_KEY=another-64-character-random-string
+ACCESS_TOKEN_EXPIRE_MINUTES=480  # 8 hours
+REFRESH_TOKEN_EXPIRE_DAYS=7
+
+# Database
+# SQLite (development):
+DATABASE_URL=sqlite:///./dallal.db
+# PostgreSQL (production):
+# DATABASE_URL=postgresql://user:password@localhost:5432/dallal_db
+
+# CORS (update with your domains)
+BACKEND_CORS_ORIGINS=["http://localhost:5173","https://yourdomain.com"]
+
+# Email/SMTP (optional)
+EMAIL_ENABLED=false
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@example.com
+SMTP_PASSWORD=your-app-password
+SMTP_FROM_EMAIL=noreply@yourdomain.com
+
+# Redis (optional)
+REDIS_ENABLED=false
+REDIS_URL=redis://localhost:6379/0
+
+# Monitoring
+SENTRY_DSN=  # Optional: Sentry error tracking
+LOG_LEVEL=INFO  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+# Security Policies
+MAX_LOGIN_ATTEMPTS=5
+LOCKOUT_DURATION_MINUTES=15
+PASSWORD_MIN_LENGTH=8
+REQUIRE_STRONG_PASSWORD=true
+
+# Service Discovery
+MDNS_ENABLED=true
+DISCOVERY_INTERVAL_SECONDS=300
+
+# SNMP
+SNMP_TRAP_PORT=162
+SNMP_COMMUNITY=public
+
+# Backup
+BACKUP_ENABLED=true
+BACKUP_SCHEDULE=0 2 * * *  # Daily at 2 AM
+BACKUP_RETENTION_DAYS=30
+```
+
+See `backend/.env.example` for complete configuration reference.
+
+## 🚀 Usage
+
+### Starting the Dashboard
+
+**Development Mode:**
+```powershell
+# Backend (with auto-reload)
 cd backend
-uvicorn main:app --reload
+python main.py
 
-# Terminal 2 - Frontend
+# Frontend (separate terminal)
 cd frontend
 npm run dev
 ```
 
-Access the application:
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:8000
-- API Docs: http://localhost:8000/docs
-
----
-
-## 🏭 Production Deployment
-
-### Prerequisites
-- Docker & Docker Compose
-- Domain name with DNS configured
-- SSL certificate (Let's Encrypt recommended)
-
-### Automated Deployment
-
-#### Linux/Mac
-```bash
-chmod +x deploy-production.sh
-./deploy-production.sh
-```
-
-#### Windows
+**Production Mode:**
 ```powershell
-.\deploy-production.ps1
+# Use the launcher script
+cd "install files"
+.\start-dashboard.bat
+
+# Or manually with Gunicorn (Linux)
+cd backend
+gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
 ```
 
-### Manual Deployment
+### First-Time Setup
 
-**Step 1: Create Environment Files**
+1. **Access Dashboard**: Navigate to `http://localhost:8000`
+2. **Create Admin User**: Use the registration interface or API
+3. **Configure Services**: Add services via the Services page
+4. **Enable Discovery**: Automatic network discovery via mDNS
+5. **Setup Alerts**: Configure email notifications in Settings
+
+### Common Tasks
+
+#### Adding a Service
+1. Navigate to **Services** page
+2. Click **"Add Service"** or use the **Service Wizard**
+3. Configure:
+   - Name, URL, description
+   - Health check settings (HTTP/TCP/Ping)
+   - Check intervals and timeouts
+   - Tags and groups
+4. Save and monitor
+
+#### SSH Connection
+1. Go to **SSH Console** page
+2. Enter connection details (host, port, username)
+3. Choose authentication (password or SSH key)
+4. Connect and use full terminal features
+5. Access SFTP browser for file management
+
+#### Docker Management
+1. Navigate to **Docker** page
+2. Configure Docker connection (local unix socket or remote TCP)
+3. View containers, images, networks, volumes
+4. Start/stop containers, view logs, monitor resources
+
+#### Setting Up Alerts
+1. Go to **Settings** → **Alerts**
+2. Configure email recipients
+3. Set alert thresholds (response time, downtime)
+4. Choose digest frequency (hourly/daily/weekly)
+5. Test email configuration
+
+## 📚 API Documentation
+
+### Interactive Documentation
+
+Dallal Dashboard provides auto-generated API documentation:
+
+- **Swagger UI**: `http://localhost:8000/docs`
+- **ReDoc**: `http://localhost:8000/redoc`
+- **OpenAPI Schema**: `http://localhost:8000/openapi.json`
+
+### API Endpoints Overview
+
+#### Authentication
+```
+POST   /api/v1/login          # User login
+POST   /api/v1/register       # User registration
+POST   /api/v1/refresh        # Refresh access token
+GET    /api/v1/me             # Get current user
+```
+
+#### Services
+```
+GET    /api/v1/services                 # List all services
+POST   /api/v1/services                 # Create service
+GET    /api/v1/services/{id}            # Get service details
+PUT    /api/v1/services/{id}            # Update service
+DELETE /api/v1/services/{id}            # Delete service
+GET    /api/v1/services/{id}/history    # Service health history
+POST   /api/v1/services/bulk-action     # Bulk operations
+```
+
+#### Docker
+```
+GET    /api/v1/docker/containers        # List containers
+POST   /api/v1/docker/containers/start  # Start container
+POST   /api/v1/docker/containers/stop   # Stop container
+GET    /api/v1/docker/images            # List images
+GET    /api/v1/docker/networks          # List networks
+```
+
+#### SSH/SFTP
+```
+POST   /ssh/connect              # Establish SSH connection
+GET    /api/v1/sftp/browse       # Browse SFTP directory
+POST   /api/v1/sftp/upload       # Upload file
+GET    /api/v1/sftp/download     # Download file
+```
+
+#### RDP
+```
+POST   /api/v1/rdp/connect       # Create RDP session
+GET    /api/v1/rdp/sessions      # List active sessions
+GET    /api/v1/rdp/recordings    # List session recordings
+```
+
+#### Monitoring & Alerts
+```
+GET    /api/v1/traps             # Get SNMP traps
+GET    /api/notifications        # Get notifications
+POST   /api/v1/webhooks          # Configure webhooks
+GET    /api/v1/reports           # Generate reports
+```
+
+#### Settings & Admin
+```
+GET    /api/v1/settings          # Get settings
+PUT    /api/v1/settings          # Update settings
+GET    /api/v1/audit             # Audit logs
+POST   /api/v1/backup            # Create backup
+GET    /api/v1/api-keys          # Manage API keys
+```
+
+### Authentication
+
+All API requests (except login/register) require JWT authentication:
 
 ```bash
-# Backend
-cp backend/.env.example backend/.env
+# Login
+curl -X POST http://localhost:8000/api/v1/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "password"}'
 
-# Generate secure secrets
-python -c "import secrets; print(f'SECRET_KEY={secrets.token_urlsafe(32)}\nREFRESH_SECRET_KEY={secrets.token_urlsafe(32)}\nAPI_KEY_SECRET={secrets.token_urlsafe(32)}')"
+# Response
+{
+  "access_token": "eyJhbGci...",
+  "token_type": "bearer"
+}
 
-# Edit backend/.env and paste the generated secrets
+# Authenticated Request
+curl http://localhost:8000/api/v1/services \
+  -H "Authorization: Bearer eyJhbGci..."
 ```
 
-**Step 2: Update Configuration**
+## 📊 Monitoring & Observability
 
-Edit `backend/.env`:
-```env
-SECRET_KEY=<your-generated-secret>
-REFRESH_SECRET_KEY=<your-generated-secret>
-DATABASE_URL=postgresql://dallal:YOUR_PASSWORD@postgres:5432/dallal_dashboard
-BACKEND_CORS_ORIGINS=["https://yourdomain.com"]
-ENVIRONMENT=production
-```
+### Built-in Monitoring
 
-Edit `frontend/.env`:
-```env
-VITE_API_BASE_URL=https://api.yourdomain.com
-VITE_ENVIRONMENT=production
-```
+**Prometheus Metrics** (`/metrics` endpoint):
+- Request count, latency, error rates
+- Service health check metrics
+- Database connection pool stats
+- Custom application metrics
 
-**Step 3: Deploy**
+**Grafana Dashboard**:
+Pre-configured dashboard available in `monitoring/grafana-dashboard.json`
 
-```bash
-# Build and start
-docker-compose -f docker-compose.prod.yml build
-docker-compose -f docker-compose.prod.yml up -d
+**Alert Rules**:
+Prometheus alert rules in `monitoring/alert_rules.yml`
 
-# Verify
-docker-compose -f docker-compose.prod.yml ps
-docker-compose -f docker-compose.prod.yml logs -f
-```
+### Health Checks
 
-**Step 4: SSL Setup (Let's Encrypt)**
+- **Application Health**: `GET /health`
+- **Service Status Engine**: Real-time monitoring with configurable intervals
+- **WebSocket Updates**: Live status updates pushed to frontend
 
-```bash
-sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
-```
+### Logging
 
-See [PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md) for complete deployment guide.
+**Structured Logging** with Loguru:
+- JSON format (production) or text (development)
+- Rotation: 10MB per file, 5 backup files
+- Levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
+- Location: `backend/logs/app.log`
 
----
+**Audit Logging**:
+All administrative actions tracked in database
 
-## 📚 Documentation
+### Error Tracking
 
-### Core Documentation
-- **[Production Deployment Guide](PRODUCTION_DEPLOYMENT.md)** - Complete production setup
-- **[Walkthrough](walkthrough.md)** - Implementation details
-- **[Performance Examples](PERFORMANCE_EXAMPLES.md)** - Usage patterns and optimization
-- **[Production Checklist](PRODUCTION_CHECKLIST.md)** - Pre-launch verification
-
-### Implementation Guides
-- [Phase 1: Security Summary](phase1_complete_summary.md)
-- [Phase 2: Performance Summary](phase2_performance_summary.md)
-- [Deployment Guide](deployment_guide.md)
-
----
-
-## 🏗️ Architecture
-
-```
-┌─────────────────────────────────────────┐
-│           Nginx (Reverse Proxy)         │
-│    SSL/TLS, Gzip, HTTP/2, Caching       │
-└────────────┬────────────────────────────┘
-             │
-     ┌───────┴────────┐
-     │                │
-┌────▼─────┐   ┌─────▼──────┐
-│ Frontend │   │  Backend   │
-│  (Vite)  │   │ (FastAPI)  │
-│  React   │   │   Python   │
-└──────────┘   └─────┬──────┘
-                     │
-              ┌──────┴───────┐
-              │              │
-       ┌──────▼────┐   ┌────▼──────┐
-       │PostgreSQL │   │   Redis   │
-       │ (Database)│   │  (Cache)  │
-       └───────────┘   └───────────┘
-```
-
----
+**Sentry Integration**:
+- Automatic error capture and reporting
+- Performance monitoring (10% transaction sampling)
+- Release tracking
+- Configure via `SENTRY_DSN` in `.env`
 
 ## 🔒 Security
 
-### Built-in Protection
-- ✅ XSS & SQL Injection Prevention
-- ✅ CSRF Protection
-- ✅ Rate Limiting (60 req/min)
-- ✅ CORS Restrictions
-- ✅ Secure Password Hashing (Argon2)
-- ✅ Account Lockout System
-- ✅ File Upload Validation
-- ✅ Audit Logging
+### Security Features
 
-### Security Headers
-```
-Content-Security-Policy
-X-Content-Type-Options: nosniff
-X-Frame-Options: DENY
-X-XSS-Protection: 1; mode=block
-Strict-Transport-Security
-```
+- ✅ **JWT Authentication**: Secure token-based auth with refresh tokens
+- ✅ **Password Hashing**: Argon2-CFFI (resistant to rainbow tables and GPU attacks)
+- ✅ **Rate Limiting**: SlowAPI middleware (60 requests/minute default)
+- ✅ **CORS Configuration**: Strict origin validation
+- ✅ **Security Headers**: CSP, X-Frame-Options, X-Content-Type-Options
+- ✅ **Encrypted Storage**: Credential vault with Fernet encryption
+- ✅ **SQL Injection Protection**: SQLModel ORM with parameterized queries
+- ✅ **XSS Protection**: React escaping + CSP headers
+- ✅ **Audit Logging**: Complete activity tracking
+- ✅ **Session Management**: Configurable timeouts and lockouts
+- ✅ **Secure File Uploads**: Extension and size validation
 
----
+### Security Best Practices
 
-## ⚡ Performance
+**Production Deployment Checklist:**
 
-### Metrics
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| Bundle Size | 2.5 MB | 1.2 MB | 52% |
-| Initial Load | 4-5s | 2-3s | 40% |
-| Search Requests | 10-50 | 1-2 | 80% |
-| Large List Render | 3-5s | <100ms | 50x |
-| Re-renders | High | Low | 70% |
+1. ✅ Change default `SECRET_KEY` to 64+ character random string
+2. ✅ Use PostgreSQL/MySQL instead of SQLite
+3. ✅ Enable HTTPS (use Nginx reverse proxy)
+4. ✅ Configure CORS to only allow your domains
+5. ✅ Enable strong password requirements
+6. ✅ Set appropriate rate limits
+7. ✅ Regular database backups
+8. ✅ Keep dependencies updated
+9. ✅ Enable Sentry error tracking
+10. ✅ Review audit logs regularly
 
-### Optimizations
-- Code Splitting (React, UI, Editors, Flow, i18n)
-- Lazy Loading (Monaco, ReactFlow)
-- Request Debouncing & Caching
-- Pagination for Large Datasets
-- React.memo for Expensive Components
-- Redis Caching with TTL
-- Database Connection Pooling
+**Never commit to version control:**
+- ❌ `.env` file (contains secrets)
+- ❌ `secret.key` file (credential vault key)
+- ❌ Database files (`*.db`)
+- ❌ Log files
 
----
+## 💻 Development
 
-## 🌍 Internationalization
-
-Supported Languages:
-- 🇮🇳 Hindi (हिन्दी)
-- 🇬🇧 English
-- 🇷🇺 Russian (Русский)
-- 🇫🇷 French (Français)
-- 🇳🇱 Dutch (Nederlands)
-- 🇰🇷 Korean (한국어)
-
----
-
-## 🛠️ Tech Stack
-
-### Frontend
-- React 19.2
-- Vite 7.2
-- Zustand (State Management)
-- ReactFlow (Topology)
-- Monaco Editor (Code Editor)
-- Recharts (Charts)
-- i18next (Internationalization)
-
-### Backend
-- FastAPI
-- PostgreSQL
-- Redis
-- SQLAlchemy
-- Alembic (Migrations)
-- python-jose (JWT)
-- Argon2 (Password Hashing)
-
-### Infrastructure
-- Docker & Docker Compose
-- Nginx
-- Let's Encrypt (SSL)
-- Gunicorn + Uvicorn
-
----
-
-## 📦 Project Structure
+### Project Structure
 
 ```
 Dallal Dashboard/
-├── backend/
+├── backend/                    # FastAPI Backend
 │   ├── app/
-│   │   ├── core/          # Core utilities
-│   │   │   ├── validation.py
-│   │   │   ├── security.py
-│   │   │   ├── cache.py
-│   │   │   └── ...
-│   │   ├── api/           # API routes
-│   │   └── models/        # Database models
-│   ├── requirements.txt
-│   └── Dockerfile.prod
+│   │   ├── api/               # API Routes
+│   │   │   └── v1/           # Version 1 endpoints
+│   │   │       ├── auth.py           # Authentication
+│   │   │       ├── services.py       # Service management
+│   │   │       ├── docker.py         # Docker API
+│   │   │       ├── ssh.py            # SSH terminal
+│   │   │       ├── rdp.py            # RDP connections
+│   │   │       ├── sftp.py           # SFTP browser
+│   │   │       ├── traps.py          # SNMP traps
+│   │   │       ├── wol.py            # Wake-on-LAN
+│   │   │       ├── webhooks.py       # Webhook management
+│   │   │       ├── backup.py         # Backup/restore
+│   │   │       ├── keys.py           # SSH key management
+│   │   │       ├── api_keys.py       # API key management
+│   │   │       ├── audit.py          # Audit logs
+│   │   │       ├── vcs.py            # Version control
+│   │   │       ├── settings.py       # Settings API
+│   │   │       └── reports.py        # Report generation
+│   │   ├── core/              # Core functionality
+│   │   │   ├── config.py             # Settings management
+│   │   │   ├── database.py           # Database connection
+│   │   │   ├── logging.py            # Logging setup
+│   │   │   └── rate_limit.py         # Rate limiting
+│   │   ├── models/            # Database models
+│   │   ├── schemas/           # Pydantic schemas
+│   │   ├── services/          # Background services
+│   │   │   ├── status_engine.py      # Service monitoring
+│   │   │   ├── discovery.py          # mDNS discovery
+│   │   │   ├── trap_receiver.py      # SNMP trap listener
+│   │   │   ├── email_service.py      # Email notifications
+│   │   │   ├── guacd_manager.py      # Guacamole daemon
+│   │   │   └── notification.py       # Notification system
+│   │   └── utils/             # Utility functions
+│   ├── main.py                # Application entry point
+│   ├── requirements.txt       # Python dependencies
+│   ├── .env.example           # Example configuration
+│   └── tests/                 # Backend tests
 │
-├── frontend/
+├── frontend/                   # React Frontend
 │   ├── src/
-│   │   ├── components/    # React components
-│   │   ├── pages/         # Page components
-│   │   ├── hooks/         # Custom hooks
-│   │   ├── services/      # API services
-│   │   └── config/        # Configuration
-│   ├── package.json
-│   └── Dockerfile.prod
+│   │   ├── pages/             # 24 Page components
+│   │   │   ├── Dashboard.jsx         # Main dashboard
+│   │   │   ├── Services.jsx          # Service management
+│   │   │   ├── Monitoring.jsx        # Metrics & monitoring
+│   │   │   ├── Alerts.jsx            # Alert management
+│   │   │   ├── SSH.jsx               # SSH terminal
+│   │   │   ├── RDP.jsx               # RDP client
+│   │   │   ├── Docker.jsx            # Docker management
+│   │   │   ├── OpsCenter.jsx         # Operations center
+│   │   │   ├── Settings.jsx          # Settings
+│   │   │   └── ...
+│   │   ├── components/        # 63+ Reusable components
+│   │   │   ├── ui/                   # UI primitives
+│   │   │   ├── layout/               # Layout components
+│   │   │   ├── ssh/                  # SSH components
+│   │   │   ├── rdp/                  # RDP components
+│   │   │   ├── settings/             # Settings forms
+│   │   │   └── ...
+│   │   ├── store/             # Zustand state management
+│   │   ├── hooks/             # Custom React hooks
+│   │   ├── services/          # API service layer
+│   │   ├── utils/             # Utility functions
+│   │   ├── i18n.js            # Internationalization
+│   │   ├── App.jsx            # Root component
+│   │   └── main.jsx           # Entry point
+│   ├── public/                # Static assets
+│   ├── package.json           # NPM dependencies
+│   ├── vite.config.js         # Vite configuration
+│   └── index.html             # HTML template
 │
-├── docker-compose.prod.yml
-├── nginx.conf
-└── docs/
+├── install files/              # Installation utilities
+│   ├── setup-all.bat                 # Complete setup
+│   ├── install-dependencies.bat     # Install deps
+│   ├── setup-config.bat             # Config wizard
+│   ├── build-frontend.bat           # Build frontend
+│   ├── start-dashboard.bat          # Start server
+│   └── CONFIG_GUIDE.md              # Config documentation
+│
+├── scripts/                    # Utility scripts
+│   ├── backup_database.py            # DB backup
+│   └── restore_database.py           # DB restore
+│
+├── monitoring/                 # Monitoring configs
+│   ├── prometheus.yml                # Prometheus config
+│   ├── alert_rules.yml               # Alert rules
+│   └── grafana-dashboard.json        # Grafana dashboard
+│
+├── nginx.homelab.conf          # Nginx reverse proxy config
+├── LICENSE                     # MIT License
+└── README.md                   # This file
 ```
 
----
+### Running Tests
+
+```bash
+# Backend tests
+cd backend
+pytest
+
+# Frontend tests
+cd frontend
+npm test
+
+# Test coverage
+npm run test:coverage
+```
+
+### Code Style
+
+**Backend (Python)**:
+- Follow PEP 8 guidelines
+- Type hints for function signatures
+- Docstrings for public functions
+
+**Frontend (JavaScript/React)**:
+- ESLint configuration provided
+- Use functional components with hooks
+- PropTypes or TypeScript for component props
+
+### Building for Production
+
+```bash
+# Build frontend
+cd frontend
+npm run build
+
+# Output: frontend/dist/
+
+# Backend runs directly from source
+# Use Gunicorn for production server
+```
+
+## 🚢 Deployment
+
+### Docker Deployment
+
+```yaml
+# docker-compose.yml example
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:pass@db:5432/dallal
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: dallal
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
+```
+
+### Nginx Reverse Proxy
+
+Use the included `nginx.homelab.conf` configuration:
+
+```nginx
+# HTTPS with SSL termination
+# Proxies to backend:8000
+# Serves frontend static files
+# WebSocket support
+# Security headers
+```
+
+### Production Checklist
+
+- [ ] SSL/TLS certificates configured (Let's Encrypt recommended)
+- [ ] PostgreSQL/MySQL database setup
+- [ ] Redis cache configured
+- [ ] Environment variables secured
+- [ ] Backup automation enabled
+- [ ] Monitoring and alerting configured
+- [ ] Log rotation setup
+- [ ] Firewall rules configured
+- [ ] Regular security updates scheduled
+- [ ] Performance monitoring active
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) before submitting PRs.
+Contributions are welcome! Please follow these guidelines:
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Commit changes**: `git commit -m 'Add amazing feature'`
+4. **Push to branch**: `git push origin feature/amazing-feature`
+5. **Open a Pull Request**
+
+### Reporting Issues
+
+- Use GitHub Issues
+- Provide detailed description
+- Include logs and error messages
+- Specify environment (OS, Python version, etc.)
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+```
+MIT License
+
+Copyright (c) 2024 SR7 (Saarthaksr7)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software...
+```
 
 ## 🙏 Acknowledgments
 
-- Built with ❤️ for the homelab community
-- Designed for production use with security and performance in mind
-- Comprehensive documentation and examples included
-
-## 👨‍💻 Author
-
-**SR7** (Saarthaksr7)
-- GitHub: [@Saarthaksr7](https://github.com/Saarthaksr7)
-- Project: [Dallal Dashboard](https://github.com/Saarthaksr7/Dallal-Dashbord)
+- **FastAPI** - Modern Python web framework
+- **React** - UI library
+- **Vite** - Next-generation frontend tooling
+- **Guacamole** - Clientless remote desktop gateway
+- **xterm.js** - Terminal emulator for the web
+- **Lucide** - Beautiful icon library
+- All open-source contributors and maintainers
 
 ## 📞 Support
 
-- **Documentation**: See `docs/` directory
-- **Issues**: [GitHub Issues](https://github.com/Saarthaksr7/Dallal-Dashbord/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Saarthaksr7/Dallal-Dashbord/discussions)
-- **Contributing**: See [CONTRIBUTING.md](CONTRIBUTING.md)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/Saarthaksr7/Dallal-Dashbord/issues)
+- **Documentation**: See `install files/CONFIG_GUIDE.md` for detailed configuration
+- **Repository**: [https://github.com/Saarthaksr7/Dallal-Dashbord](https://github.com/Saarthaksr7/Dallal-Dashbord)
+
+## 🗺️ Roadmap
+
+### Upcoming Features
+- [ ] Kubernetes integration
+- [ ] Mobile app (React Native)
+- [ ] Advanced analytics and predictions
+- [ ] Multi-tenancy support
+- [ ] Plugin system for extensions
+- [ ] Automated incident response workflows
+- [ ] Integration with more monitoring tools (Zabbix, Nagios)
 
 ---
 
-<div align="center">
-
-**Made with ❤️ by SR7**
-
-⭐ Star this repository if you find it helpful!
-
-[![GitHub](https://img.shields.io/github/stars/Saarthaksr7/Dallal-Dashbord?style=social)](https://github.com/Saarthaksr7/Dallal-Dashbord)
-
-</div>
+**Made with ❤️ by SR7 (Saarthaksr7)**  
+**Version 1.0.7** | **Last Updated: December 2025**
